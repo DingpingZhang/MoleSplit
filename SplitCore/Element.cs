@@ -20,7 +20,6 @@ namespace MoleSplit
         public override void Parse()
         {
             base.DefinedFragment = new Dictionary<string, int>();
-            base.UndefinedFragment = new Dictionary<string, int>();
 
             var r = new Regex(@"^\D\D?");
             for (int i = 0; i < base.Molecule.AtomList.Length; i++)
@@ -31,13 +30,8 @@ namespace MoleSplit
                     if (!base.DefinedFragment.ContainsKey(temp)) { base.DefinedFragment.Add(temp, 0); }
                     base.DefinedFragment[temp]++;
                 }
-                else
-                {
-                    if (!base.UndefinedFragment.ContainsKey(temp)) { base.UndefinedFragment.Add(temp, 0); }
-                    base.UndefinedFragment[temp]++;
-                }
             }
-            if (this._elementPattern.Contains("H"))
+            if (this._elementPattern.Contains("H")) // 统计H元素个数
             {
                 int n = this.Element_H();
                 if (n > 0)

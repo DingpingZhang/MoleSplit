@@ -122,7 +122,6 @@ namespace MoleSplit
             this._nSign = 1;
             for (int i = 0; i < this._redicalToMatch.Count; i++)
             {
-                if (base.Molecule.AtomList.Length < this._redicalToMatch[i].AtomCodeList.Length) { continue; }
                 this._redical = this._redicalToMatch[i];
                 var result = this.Match(); // 匹配出结果
                 for (int j = 0; j < result.Count; j++)
@@ -214,8 +213,9 @@ namespace MoleSplit
         // Core -------------------------------------------------------------------------------------
         private void MatchCore(Action operation)
         {
+            if (this._nAtom < this._redical.AtomCodeList.Length) { return; }
             this._matched = new int[this._redical.AtomCodeList.Length];
-            for (int i = 0; i < base.Molecule.AtomList.Length; i++)
+            for (int i = 0; i < this._nAtom; i++)
             {
                 if (base.Molecule.Sign[i] == 0
                  && this._redical.AtomCodeList[0].IsMatch(base.Molecule.AtomList[i]))
