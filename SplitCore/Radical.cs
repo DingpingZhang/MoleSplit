@@ -8,7 +8,7 @@ namespace MoleSplit
     /// <summary>
     /// 子图识别器
     /// </summary>
-    class Redical : ARecognizer, IAddAttribute
+    class Radical : ARecognizer, IAddAttribute
     {
         private class Subgraph
         {
