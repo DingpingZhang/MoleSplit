@@ -42,7 +42,12 @@ namespace MoleSplit
         /// <param name="text">分子信息文本</param>
         public MoleInfo(string text)
         {
-            string[] molInfo = text.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string[] molInfo;
+            if (text.Contains(" H "))
+                molInfo = this.GetTextWithoutH(text);
+            else
+                molInfo = text.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
             string[] tempStrs = molInfo[3].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             int nAtom = int.Parse(tempStrs[0]);
             int nSide = int.Parse(tempStrs[1]);
@@ -77,6 +82,38 @@ namespace MoleSplit
                 this.AtomList[i] = tempAtomCode;
                 this.Charge[i] = tempStrs[5] == "0" ? 0 : 4 - int.Parse(tempStrs[5]);
             }
+        }
+        private string[] GetTextWithoutH(string text)
+        {
+            var molInfo = text.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string[] tempStrs = molInfo[3].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            int nAtom = int.Parse(tempStrs[0]);
+            int nSide = int.Parse(tempStrs[1]);
+            if (nAtom > 1000) { nSide = nAtom % 1000; nAtom /= 1000; }
+
+            var temp = new List<string>();
+            var index = new List<int>();
+            for (int i = 0; i < 4; i++) temp.Add(molInfo[i]);
+            for (int i = 0; i < nAtom; i++)
+            {
+                if (molInfo[i + 4].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[3] != "H")
+                    temp.Add(molInfo[i + 4]);
+                else
+                    index.Add(i);
+            }
+            temp[3] = (nAtom - index.Count) + " " + (nSide - index.Count);
+            int p1 = 0, p2 = 0;
+            for (int i = 0; i < nSide; i++)
+            {
+                tempStrs = molInfo[i + 4 + nAtom].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                p1 = int.Parse(tempStrs[0]);
+                p2 = int.Parse(tempStrs[1]);
+                if (p1 >= 1000)  { p2 = p1 % 1000; p1 /= 1000; }
+                p1--; p2--;
+                if (!(index.Contains(p1) || index.Contains(p2)))
+                    temp.Add(molInfo[i + 4 + nAtom]);
+            }
+            return temp.ToArray();
         }
         private string StringSort(string str)
         {
