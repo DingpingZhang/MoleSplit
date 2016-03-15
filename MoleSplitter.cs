@@ -9,7 +9,7 @@ using MoleSplit;
 
 namespace MoleSplit
 {
-    public class MoleSpliter
+    public class MoleSplitter
     {
         /// <summary>
         /// 定义的分子片段
@@ -35,7 +35,6 @@ namespace MoleSplit
             {
                 this._molecule = new MoleInfo(sr.ReadToEnd());
             }
-            
         }
         /// <summary>
         /// 加载定义文件
