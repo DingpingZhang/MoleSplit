@@ -204,7 +204,7 @@ namespace MoleSplit
             {
                 for (int i = 0; i < this._redical.SpecialAtom.Length; i++) // 还原SpecialAtom
                 {
-                    base.Molecule.Sign[this._redical.SpecialAtom[i]] = 0;
+                    base.Molecule.Sign[this._matched[this._redical.SpecialAtom[i]]] = 0;
                 }
                 core_List.Add(this._matched[0]);
                 this._nSign++;
