@@ -51,12 +51,13 @@ namespace MoleSplit
                         this.Tag[i] = tags[i + 1];
                     }
                 }
-
                 for (int i = 1; i < info.Length; i++)
                 {
                     string[] element = info[i].Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    string regexStr = '^' + element[0] + '_';
+                    string regexStr = '^' + element[0];
+                    regexStr = regexStr.Replace("_", "_(_.+?)*");
+                    regexStr = regexStr.Replace("$", @"_$");
+                    if (regexStr.Length - 1 == element[0].Length) { regexStr = element[0] + '_'; }
                     this.AtomCodeList[i - 1] = new Regex(regexStr, RegexOptions.Compiled);
                     int[] temp = new int[i - 1];
                     for (int k = 0; k < temp.Length; k++)
@@ -217,7 +218,7 @@ namespace MoleSplit
             this._matched = new int[this._redical.AtomCodeList.Length];
             for (int i = 0; i < this._nAtom; i++)
             {
-                if (base.Molecule.Sign[i] == 0
+                if ((base.Molecule.Sign[i] == 0 || (this._redical.Name[0]=='*' && this._redical.SpecialAtom.Contains(0)))
                  && this._redical.AtomCodeList[0].IsMatch(base.Molecule.AtomList[i]))
                 {
                     this._matched[0] = i;
@@ -249,7 +250,7 @@ namespace MoleSplit
                 for (int p_M_Next = 0; p_M_Next < this._nAtom; p_M_Next++)
                 {
                     if (base.Molecule.AdjMat[this._matched[i], p_M_Next] != 0
-                     && base.Molecule.Sign[p_M_Next] <= 0
+                     && (base.Molecule.Sign[p_M_Next] <= 0 || (this._redical.Name[0] == '*' && this._redical.SpecialAtom.Contains(n)))
                      && this._redical.AtomCodeList[n].IsMatch(base.Molecule.AtomList[p_M_Next]))
                     {
                         this._matched[n] = p_M_Next;

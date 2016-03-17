@@ -42,7 +42,7 @@ namespace MoleSplit
         /// <param name="filePath"></param>
         public void LoadDefineFile(string filePath)
         {
-            this._recognizer = new List<ARecognizer>();
+            if (this._molecule != null) { this._molecule.Sign = new int[this._molecule.Sign.Length]; }
 
             if (!(File.Exists(filePath) && new Regex(".mdef$").IsMatch(filePath))) { return; }
             string[] temp;
@@ -50,6 +50,7 @@ namespace MoleSplit
             {
                 temp = sr.ReadToEnd().Split(new char[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
             }
+            this._recognizer = new List<ARecognizer>();
             for (int i = 0; i < temp.Length; i += 2)
             {
                 var tempObj = (ARecognizer)Activator.CreateInstance(Type.GetType("MoleSplit." + temp[i]));
