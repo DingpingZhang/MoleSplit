@@ -42,7 +42,7 @@ namespace MoleSplit
         /// <param name="filePath"></param>
         public void LoadDefineFile(string filePath)
         {
-            if (this._molecule != null) { this._molecule.Sign = new int[this._molecule.Sign.Length]; }
+            if (this._molecule != null) { this._molecule.State = new int[this._molecule.State.Length]; }
 
             if (!(File.Exists(filePath) && new Regex(".mdef$").IsMatch(filePath))) { return; }
             string[] temp;

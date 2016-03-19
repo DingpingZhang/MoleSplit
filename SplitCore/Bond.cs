@@ -42,8 +42,8 @@ namespace MoleSplit
                 for (int j = 0; j < i; j++)
                 {
                     if (base.Molecule.AdjMat[i, j] != 0
-                    && (base.Molecule.Sign[i] - base.Molecule.Sign[j] != 0
-                     || base.Molecule.Sign[i] + base.Molecule.Sign[j] == 0))
+                    && (base.Molecule.State[i] - base.Molecule.State[j] != 0
+                     || base.Molecule.State[i] + base.Molecule.State[j] == 0))
                     {
                         var atom_1 = r.Match(base.Molecule.AtomList[i]).Value;
                         var atom_2 = r.Match(base.Molecule.AtomList[j]).Value;

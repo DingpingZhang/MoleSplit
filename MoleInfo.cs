@@ -24,7 +24,7 @@ namespace MoleSplit
         /// 1：不可使用；
         /// -1：首原子不可使用，后续匹配中可以使用；
         /// </summary>
-        public int[] Sign { get; set; }
+        public int[] State { get; set; }
         /// <summary>
         /// 电荷标记（在H统计中用到）
         /// </summary>
@@ -55,7 +55,7 @@ namespace MoleSplit
 
             this.AdjMat = new int[nAtom, nAtom];
             this.AtomList = new string[nAtom];
-            this.Sign = new int[nAtom];
+            this.State = new int[nAtom];
             this.Charge = new int[nAtom];
             this.NRing = (nSide - nAtom + 1);
 
