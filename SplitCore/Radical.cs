@@ -202,7 +202,7 @@ namespace MoleSplit
             this._matched = new int[this._radical.AtomCodeList.Length];
             for (int i = 0; i < this._nAtom; i++)
             {
-                if ((base.Molecule.State[i] == 0 || this._radical.SpecialAtom.Contains(0))
+                if ((base.Molecule.State[i] == 0 || (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0)))
                  && this._radical.AtomCodeList[0].IsMatch(base.Molecule.AtomList[i]))
                 {
                     this._matched[0] = i;
