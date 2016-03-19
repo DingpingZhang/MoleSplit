@@ -125,7 +125,12 @@ namespace MoleSplit
             for (int i = 0; i < this._radicalToMatch.Count; i++)
             {
                 this._radical = this._radicalToMatch[i];
-                var result = this.Match(); // 匹配出结果
+                var result = new List<int>(); // 匹配出结果
+                this.MatchCore(() =>
+                {
+                    result.Add(this._matched[0]);
+                    this._Sign++; // 每匹配完一个基团（包括相同的基团第二次匹配）就自增一次
+                });
                 for (int j = 0; j < result.Count; j++)
                 {
                     var tempName = (this._radical.Name + this.RecAttribute(this._radical.Tag, result[j])).Replace("*", ""); // 进行属性判断
@@ -142,7 +147,23 @@ namespace MoleSplit
             for (int i = 0; i < this._radicalToRename.Count; i++)
             {
                 this._radical = this._radicalToRename[i];
-                this.Rename(this._radicalToRename[i].SpecialAtom);
+                this.MatchCore(() =>
+                {
+                    if (this._radical.Name[0] == '_') // 属性添加
+                    {
+                        for (int j = 0; j < this._radicalToRename[i].SpecialAtom.Length; j++)
+                        {
+                            base.Molecule.AtomList[this._matched[this._radicalToRename[i].SpecialAtom[j]]] += this._radical.Name;
+                        }
+                    }
+                    else // 全名重载
+                    {
+                        for (int j = 0; j < this._radicalToRename[i].SpecialAtom.Length; j++)
+                        {
+                            base.Molecule.AtomList[this._matched[this._radicalToRename[i].SpecialAtom[j]]] = this._radical.Name;
+                        }
+                    }
+                });
                 base.Molecule.State = new int[this._nAtom];
             }
         }
@@ -173,44 +194,6 @@ namespace MoleSplit
                 if (attribute != "") { return attribute; }
             }
             return "";
-        }
-        private void Rename(int[] renameIndex)
-        {
-            this.MatchCore(() =>
-            {
-                //for (int i = 0; i < this._matched.Length; i++) // 全部还原
-                //{
-                //    base.Molecule.Sign[this._matched[i]] = -1; // 后续原子能用，首原子不能用
-                //}
-                if (this._radical.Name[0] == '_') // 属性添加
-                {
-                    for (int i = 0; i < renameIndex.Length; i++)
-                    {
-                        base.Molecule.AtomList[this._matched[renameIndex[i]]] += this._radical.Name;
-                    }
-                }
-                else // 全名重载
-                {
-                    for (int i = 0; i < renameIndex.Length; i++)
-                    {
-                        base.Molecule.AtomList[this._matched[renameIndex[i]]] = this._radical.Name;
-                    }
-                }
-            });
-        }
-        private List<int> Match()
-        {
-            var core_List = new List<int>();
-            this.MatchCore(() =>
-            {
-                //for (int i = 0; i < this._radical.SpecialAtom.Length; i++) // 还原SpecialAtom
-                //{
-                //    base.Molecule.State[this._matched[this._radical.SpecialAtom[i]]] = 0;
-                //}
-                core_List.Add(this._matched[0]);
-                this._Sign++; // 每匹配完一个基团（包括相同的基团第二次匹配）就自增一次
-            });
-            return core_List;
         }
         // Core -------------------------------------------------------------------------------------
         private void MatchCore(Action operation)
