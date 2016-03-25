@@ -10,7 +10,7 @@ namespace MoleSplit
     /// </summary>
     class Ring : ARecognizer, IAddAttribute
     {
-        private string _attributeTag;
+        private Dictionary<string, string> _attributeTag;
         private bool _isGetEachRing; // 标记是否需要在搜索时获得每一个平面最小环
         // ---------------------------------------------------------------------------------
         private List<int> _ringAtom; // 记录所有环上的原子(无序)
@@ -20,6 +20,7 @@ namespace MoleSplit
         // ---------------------------------------------------------------------------------
         public override void Load(string text)
         {
+            this._attributeTag = new Dictionary<string, string>();
             var item = text.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var r = new Regex(@"(.+?)=\((.+?)\)");
             for (int i = 0; i < item.Length; i++)
@@ -27,8 +28,14 @@ namespace MoleSplit
                 var m = r.Match(item[i]);
                 var temp_1 = m.Groups[1].Value;
                 var temp_2 = m.Groups[2].Value;
-                if (temp_2 == "RING") { this._attributeTag = temp_1; }
-                if (temp_2 == "MEMRING") { this._isGetEachRing = true; }
+                if (temp_2 == "MEMRING")
+                {
+                    this._isGetEachRing = true;
+                }
+                else
+                {
+                    this._attributeTag.Add(temp_2, temp_1);
+                }
             }
         }
         public override void Parse()
@@ -46,12 +53,60 @@ namespace MoleSplit
         public void AddAttribute()
         {
             if (this._attributeTag == null) { return; }
+
+            foreach (var item in this._attributeTag)
+            {
+                switch (item.Key)
+                {
+                    case "RING": this.Sign_RING(item.Value);
+                        break;
+                    case "C_RING": this.Sign_C_RING(item.Value, "^C");
+                        break;
+                    case "SAT_C_RING": this.Sign_C_RING(item.Value, "^C111?");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        private void Sign_RING(string sign)
+        {
             this.SerachCore();
             for (int i = 0; i < this._ringAtom.Count; i++)
             {
-                base.Molecule.AtomList[this._ringAtom[i]] += this._attributeTag;
+                base.Molecule.AtomList[this._ringAtom[i]] += sign;
             }
         }
+        private void Sign_C_RING(string sign, string regex)
+        {
+            var result = this.GetEachRing();
+            if (result.Length == 0)
+            {
+                this.SerachCore();
+                result = new int[1][];
+                result[0] = this._ringAtom.ToArray();
+            }
+
+            var r = new Regex(regex);
+            for (int i = 0; i < result.Length; i++)
+            {
+                bool b = false;
+                for (int j = 0; j < result[i].Length; j++)
+                {
+                    if (!r.IsMatch(this.Molecule.AtomList[result[i][j]]))
+                    {
+                        b = true;
+                        continue;
+                    }
+                }
+                if (b) { continue; }
+                for (int j = 0; j < result[i].Length; j++)
+                {
+                    base.Molecule.AtomList[result[i][j]] += sign;
+                }
+            }
+        }
+
         public int[][] GetEachRing()
         {
             if (base.Molecule.NRing < 2) { return new int[0][]; }
