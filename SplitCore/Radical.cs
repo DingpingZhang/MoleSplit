@@ -76,7 +76,7 @@ namespace MoleSplit
         private bool _isBreak; // 中断递归
         private int[] _matched; // 记录已匹配的原子索引
         private int _nAtom; // 原子个数
-        private int _Sign; // 给原子打上的状态码
+        private int _sign; // 给原子打上的状态码
         private bool[] _lock; // 在原子的匹配过程中锁住正在使用的原子
         // ---------------------------------------------------------------------------------
         public override void Load(string text)
@@ -121,7 +121,7 @@ namespace MoleSplit
         {
             base.DefinedFragment = new Dictionary<string, int>();
             this._nAtom = base.Molecule.AtomList.Length; // 取出原子个数，性能分析指出：此项使用调用极为频繁，若调用属性（函数）将大大拖慢程序
-            this._Sign = 1;
+            this._sign = 1;
             for (int i = 0; i < this._radicalToMatch.Count; i++)
             {
                 this._radical = this._radicalToMatch[i];
@@ -129,7 +129,7 @@ namespace MoleSplit
                 this.MatchCore(() =>
                 {
                     result.Add(this._matched[0]);
-                    this._Sign++; // 每匹配完一个基团（包括相同的基团第二次匹配）就自增一次
+                    //this._Sign++; // 每匹配完一个基团（包括相同的基团第二次匹配）就自增一次
                 });
                 for (int j = 0; j < result.Count; j++)
                 {
@@ -143,7 +143,7 @@ namespace MoleSplit
         {
             this._nAtom = base.Molecule.AtomList.Length;
             this._lock = new bool[this._nAtom];
-            this._Sign = -1;
+            this._sign = -1;
             for (int i = 0; i < this._radicalToRename.Count; i++)
             {
                 this._radical = this._radicalToRename[i];
@@ -164,7 +164,7 @@ namespace MoleSplit
                         }
                     }
                 });
-                base.Molecule.State = new int[this._nAtom];
+                base.Molecule.AtomState = new int[this._nAtom];
             }
         }
         // ---------------------------------------------------------------------------------
@@ -202,13 +202,14 @@ namespace MoleSplit
             this._matched = new int[this._radical.AtomCodeList.Length];
             for (int i = 0; i < this._nAtom; i++)
             {
-                if ((base.Molecule.State[i] == 0 || (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0)))
+                if ((base.Molecule.AtomState[i] == 0 
+                 || (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0)))
                  && this._radical.AtomCodeList[0].IsMatch(base.Molecule.AtomList[i]))
                 {
                     this._matched[0] = i;
                     this._isBreak = false;
-                    int backupState = base.Molecule.State[this._matched[0]]; // 备份原子访问状态
-                    base.Molecule.State[i] = this._Sign;
+                    int backupState = base.Molecule.AtomState[this._matched[0]]; // 备份原子访问状态
+                    base.Molecule.AtomState[i] = this._sign;
                     this._lock[i] = true; // 锁定首原子
                     //this._lock = new bool[this._nAtom]; // 没有正在使用中的原子
                     this.Match_R(1);
@@ -216,7 +217,7 @@ namespace MoleSplit
                     // 退出时，将特殊原子全部恢复
                     if (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0))
                     {
-                        base.Molecule.State[i] = backupState;
+                        base.Molecule.AtomState[i] = backupState;
                     }
                     if (this._isBreak)
                     {
@@ -224,7 +225,7 @@ namespace MoleSplit
                     }
                     else
                     {
-                        base.Molecule.State[i] = backupState; // 当匹配失败时，从备份中还原原子状态
+                        base.Molecule.AtomState[i] = backupState; // 当匹配失败时，从备份中还原原子状态
                     }
                 }
             }
@@ -242,15 +243,15 @@ namespace MoleSplit
                 for (int p_M_Next = 0; p_M_Next < this._nAtom; p_M_Next++)
                 {
                     if (base.Molecule.AdjMat[this._matched[i], p_M_Next] != 0
-                     && ((base.Molecule.State[p_M_Next] <= 0 || this._radical.SpecialAtom.Contains(n)) && !this._lock[p_M_Next]) // 下个原子的状态码表示可用且该原子并没有正在被使用
+                     && ((base.Molecule.AtomState[p_M_Next] <= 0 || this._radical.SpecialAtom.Contains(n)) && !this._lock[p_M_Next]) // 下个原子的状态码表示可用且该原子并没有正在被使用
                      && this._radical.AtomCodeList[n].IsMatch(base.Molecule.AtomList[p_M_Next]))
                     {
                         this._matched[n] = p_M_Next;
                         if (this.Compare(n, this._matched))
                         {
-                            int backupState = base.Molecule.State[this._matched[n]];
+                            int backupState = base.Molecule.AtomState[this._matched[n]];
                             // 进：修改原子状态 && 锁定原子
-                            base.Molecule.State[p_M_Next] = this._Sign;
+                            base.Molecule.AtomState[p_M_Next] = this._sign;
                             this._lock[p_M_Next] = true;
 
                             this.Match_R(n + 1);
@@ -260,12 +261,12 @@ namespace MoleSplit
                                 // 退出时，将特殊原子全部恢复
                                 if (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(n))
                                 {
-                                    base.Molecule.State[p_M_Next] = backupState;
+                                    base.Molecule.AtomState[p_M_Next] = backupState;
                                 }
                                 return;
                             }
                             // 退：恢复原子状态 && 接触锁定
-                            base.Molecule.State[p_M_Next] = backupState;
+                            base.Molecule.AtomState[p_M_Next] = backupState;
                             this._lock[p_M_Next] = false;
                         }
                     }

@@ -14,21 +14,35 @@ namespace MoleSplit
         /// 分子邻接矩阵
         /// </summary>
         public int[,] AdjMat { get; private set; }
+
         /// <summary>
         /// 原子列表（对应邻接矩阵）
         /// </summary>
         public string[] AtomList { get; set; }
+
         /// <summary>
         /// 标记原子是否可用
         /// 0：未尝用也；
         /// 1：不可使用；
         /// -1：首原子不可使用，后续匹配中可以使用；
         /// </summary>
-        public int[] State { get; set; }
+        public int[] AtomState { get; set; }
+
+        /// <summary>
+        /// 化学键状态
+        /// </summary>
+        public int[,] BondState { get; set; }
+
+        /// <summary>
+        /// 设置或获取是否启用基于化学键的屏蔽策略
+        /// </summary>
+        public bool IsUseBondLock { get; set; }
+
         /// <summary>
         /// 电荷标记（在H统计中用到）
         /// </summary>
         public int[] Charge { get; private set; }
+
         /// <summary>
         /// 标记分子中的环数
         /// </summary>
@@ -55,7 +69,9 @@ namespace MoleSplit
 
             this.AdjMat = new int[nAtom, nAtom];
             this.AtomList = new string[nAtom];
-            this.State = new int[nAtom];
+            this.AtomState = new int[nAtom];
+            this.BondState = new int[nAtom, nAtom];
+            this.IsUseBondLock = false; // 默认不启用基于键的屏蔽
             this.Charge = new int[nAtom];
             this.NRing = (nSide - nAtom + 1);
 

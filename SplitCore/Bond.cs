@@ -18,7 +18,6 @@ namespace MoleSplit
         public override void Load(string text)
         {
             var item = text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
             this._bondPattern = new List<string>();
             this._bondTag = new Dictionary<string, string>();
             for (int i = 0; i < item.Length; i++)
@@ -41,9 +40,7 @@ namespace MoleSplit
             {
                 for (int j = 0; j < i; j++)
                 {
-                    if (base.Molecule.AdjMat[i, j] != 0
-                    && (base.Molecule.State[i] - base.Molecule.State[j] != 0
-                     || base.Molecule.State[i] + base.Molecule.State[j] == 0))
+                    if (base.Molecule.AdjMat[i, j] != 0 && base.Molecule.BondState[i, j] == 0)
                     {
                         var atom_1 = r.Match(base.Molecule.AtomList[i]).Value;
                         var atom_2 = r.Match(base.Molecule.AtomList[j]).Value;

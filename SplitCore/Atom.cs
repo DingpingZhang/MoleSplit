@@ -43,7 +43,7 @@ namespace MoleSplit
 
             for (int i = 0; i < base.Molecule.AtomList.Length; i++)
             {
-                if (this.Molecule.State[i] != 0) { continue; }
+                if (this.Molecule.AtomState[i] != 0) { continue; }
                 string atomCode = base.Molecule.AtomList[i].Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries)[0];
                 if (this._atomPattern.ContainsKey(atomCode))
                 {
