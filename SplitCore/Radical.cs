@@ -8,7 +8,7 @@ namespace MoleSplit
     /// <summary>
     /// 子图识别器
     /// </summary>
-    class Radical : ARecognizer, IAddAttribute
+    class Radical : ARecognizer
     {
         private class Subgraph
         {
@@ -127,8 +127,12 @@ namespace MoleSplit
         }
         public override void Parse()
         {
-            base.DefinedFragment = new Dictionary<string, int>();
             this._nAtom = base.Molecule.AtomList.Length; // 取出原子个数，性能分析指出：此项使用调用极为频繁，若调用属性（函数）将大大拖慢程序
+            this._lock = new bool[this._nAtom];
+            base.DefinedFragment = new Dictionary<string, int>();
+            // -----------------------------------------------------
+            this.AddAttribute();
+            // -----------------------------------------------------
             this._sign = 1;
             for (int i = 0; i < this._radicalToMatch.Count; i++)
             {
@@ -146,12 +150,11 @@ namespace MoleSplit
                     if (!base.DefinedFragment.ContainsKey(tempName)) { base.DefinedFragment.Add(tempName, 0); }
                     base.DefinedFragment[tempName]++; // 装入结果
                 }
+                // -----------------------------------------------------
             }
         }
-        public void AddAttribute()
+        private void AddAttribute()
         {
-            this._nAtom = base.Molecule.AtomList.Length;
-            this._lock = new bool[this._nAtom];
             this._sign = -1;
             for (int i = 0; i < this._radicalToRename.Count; i++)
             {

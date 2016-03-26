@@ -15,15 +15,22 @@ namespace MoleSplit
         /// 定义的分子片段
         /// </summary>
         public Dictionary<string, int> DefinedFragment { get; protected set; }
+
         /// <summary>
         /// 未定义的分子片段
         /// </summary>
         public Dictionary<string, int> UndefineFragment { get; protected set; }
+
         /// <summary>
         /// 待解析的分子
         /// </summary>
         private MoleInfo _molecule;
+
+        /// <summary>
+        /// 解析器组
+        /// </summary>
         private List<ARecognizer> _recognizer;
+
         /// <summary>
         /// 加载mol文件
         /// </summary>
@@ -36,6 +43,7 @@ namespace MoleSplit
                 this._molecule = new MoleInfo(sr.ReadToEnd());
             }
         }
+
         /// <summary>
         /// 加载定义文件
         /// </summary>
@@ -58,26 +66,19 @@ namespace MoleSplit
                 this._recognizer.Add(tempObj);
             }
         }
+
         /// <summary>
         /// 启动解析
         /// </summary>
         public void Parse()
         {
-            // 1.添加属性
+            // 1.进行解析
             for (int i = 0; i < this._recognizer.Count; i++)
             {
                 this._recognizer[i].Molecule = this._molecule;
-                if (this._recognizer[i] is IAddAttribute)
-                {
-                    ((IAddAttribute)this._recognizer[i]).AddAttribute();
-                }
-            }
-            // 2.进行解析
-            for (int i = 0; i < this._recognizer.Count; i++)
-            {
                 this._recognizer[i].Parse();
             }
-            // 3.结算结果
+            // 2.结算结果
             this.DefinedFragment = new Dictionary<string, int>();
             this.UndefineFragment = new Dictionary<string, int>();
             for (int i = 0; i < this._recognizer.Count; i++)
