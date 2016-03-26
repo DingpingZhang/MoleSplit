@@ -104,29 +104,41 @@ namespace MoleSplit
             int nAtom = int.Parse(tempStrs[0]);
             int nSide = int.Parse(tempStrs[1]);
             if (nAtom > 1000) { nSide = nAtom % 1000; nAtom /= 1000; }
-
+            // ---------------------------------------------------------------
+            int[] indexDict = new int[nAtom];
+            int nAtom_WithoutH = 0;
             var temp = new List<string>();
-            var index = new List<int>();
-            for (int i = 0; i < 4; i++) temp.Add(molInfo[i]);
+            for (int i = 0; i < nAtom; i++) { indexDict[i] = i + 1; }
+            for (int i = 0; i < 4; i++) { temp.Add(""); }
             for (int i = 0; i < nAtom; i++)
             {
                 if (molInfo[i + 4].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[3] != "H")
+                {
+                    nAtom_WithoutH++;
                     temp.Add(molInfo[i + 4]);
+                }
                 else
-                    index.Add(i);
+                {
+                    indexDict[i] = 0;
+                    for (int j = i + 1; j < indexDict.Length; j++) { indexDict[j]--; }
+                }
             }
-            temp[3] = (nAtom - index.Count) + " " + (nSide - index.Count);
-            int p1 = 0, p2 = 0;
-            for (int i = 0; i < nSide; i++)
+            // ---------------------------------------------------------------
+            for (int i = 0, p1 = 0, p2 = 0; i < nSide; i++)
             {
                 tempStrs = molInfo[i + 4 + nAtom].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 p1 = int.Parse(tempStrs[0]);
                 p2 = int.Parse(tempStrs[1]);
-                if (p1 >= 1000)  { p2 = p1 % 1000; p1 /= 1000; }
-                p1--; p2--;
-                if (!(index.Contains(p1) || index.Contains(p2)))
-                    temp.Add(molInfo[i + 4 + nAtom]);
+                if (p1 >= 1000)  { p2 = p1 % 1000; p1 /= 1000; } p1--; p2--;
+
+                if (indexDict[p1] == 0) { continue; } else { tempStrs[0] = indexDict[p1].ToString(); }
+                if (indexDict[p2] == 0) { continue; } else { tempStrs[1] = indexDict[p2].ToString(); }
+
+                string tempStr = "";
+                for (int j = 0; j < 3; j++) { tempStr += (tempStrs[j] + " "); }
+                temp.Add(tempStr);
             }
+            temp[3] = nAtom_WithoutH + " " + (temp.Count - nAtom_WithoutH - 4);
             return temp.ToArray();
         }
         private string StringSort(string str)
