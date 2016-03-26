@@ -8,9 +8,10 @@ namespace MoleSplit
     /// <summary>
     /// 环识别器
     /// </summary>
-    class Ring : ARecognizer, IAddAttribute
+    class Ring : ARecognizer
     {
-        private Dictionary<string, string> _attributeTag;
+        private List<string> _operType;
+        private List<string> _operObject;
         private bool _isGetEachRing; // 标记是否需要在搜索时获得每一个平面最小环
         // ---------------------------------------------------------------------------------
         private List<int> _ringAtom; // 记录所有环上的原子(无序)
@@ -21,61 +22,60 @@ namespace MoleSplit
 
         public override void Load(string text)
         {
-            this._attributeTag = new Dictionary<string, string>();
+            this._operType = new List<string>();
+            this._operObject = new List<string>();
+
             var item = text.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var r = new Regex(@"(.+?)=\((.+?)\)");
             for (int i = 0; i < item.Length; i++)
             {
                 var m = r.Match(item[i]);
-                var temp_1 = m.Groups[1].Value;
-                var temp_2 = m.Groups[2].Value;
-                if (temp_2 == "MEMRING")
-                {
-                    this._isGetEachRing = true;
-                }
-                else
-                {
-                    this._attributeTag.Add(temp_2, temp_1);
-                }
+                this._operType.Add(m.Groups[1].Value);
+                this._operObject.Add(m.Groups[2].Value);
             }
         }
 
         public override void Parse()
         {
-            if (!this._isGetEachRing) { return; }
-            base.DefinedFragment = new Dictionary<string, int>();
-            this.SerachCore();
-            for (int i = 0; i < this._order.Count; i++)
+            //if (!this._isGetEachRing) { return; }
+            for (int i = 0; i < this._operType.Count; i++)
             {
-                var temp = this._order[i][0].ToString() + "_Membered_Ring";
-                if (!base.DefinedFragment.ContainsKey(temp)) { base.DefinedFragment.Add(temp, 0); }
-                base.DefinedFragment[temp]++;
+                if (this._operType[i] == "PRINT")
+                {
+                    base.DefinedFragment = new Dictionary<string, int>();
+                    this.SerachCore();
+                    for (int j = 0; j < this._order.Count; j++)
+                    {
+                        var temp = this._order[j][0].ToString() + '_' + this._operObject[i];
+                        if (!base.DefinedFragment.ContainsKey(temp)) { base.DefinedFragment.Add(temp, 0); }
+                        base.DefinedFragment[temp]++;
+                    }
+                }
+                else
+                {
+                    this.AddAttribute(this._operType[i], this._operObject[i]);
+                }
             }
         }
 
-        public void AddAttribute()
+        private void AddAttribute(string operType, string operObject)
         {
-            if (this._attributeTag == null) { return; }
-
-            foreach (var item in this._attributeTag)
+            switch (operObject)
             {
-                switch (item.Key)
-                {
-                    case "RING": this.SignRing(this.GetRing(), item.Value);
-                        break;
-                    case "C_RING": this.SignRing(this.GetRing("^C"), item.Value);
-                        break;
-                    case "SAT_C_RING": this.SignRing(this.GetRing("^C111?"), item.Value);
-                        break;
-                    case "RING_BOND": this.SignRing(this.GetRing("."));
-                        break;
-                    case "C_RING_BOND": this.SignRing(this.GetRing("^C"));
-                        break;
-                    case "SAT_C_RING_BOND": this.SignRing(this.GetRing("^C111?"));
-                        break;
-                    default:
-                        break;
-                }
+                case "RING": this.SignRing(this.GetRing(), operType);
+                    break;
+                case "C_RING": this.SignRing(this.GetRing("^C"), operType);
+                    break;
+                case "SAT_C_RING": this.SignRing(this.GetRing("^C111?"), operType);
+                    break;
+                case "RING_BOND": this.SignRing(this.GetRing("."));
+                    break;
+                case "C_RING_BOND": this.SignRing(this.GetRing("^C"));
+                    break;
+                case "SAT_C_RING_BOND": this.SignRing(this.GetRing("^C111?"));
+                    break;
+                default:
+                    break;
             }
         }
 
