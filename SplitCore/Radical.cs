@@ -78,6 +78,7 @@ namespace MoleSplit
         private int _nAtom; // 原子个数
         private int _sign; // 给原子打上的状态码
         private bool[] _lock; // 在原子的匹配过程中锁住正在使用的原子
+        private bool _isLockingBond; // 是否启用基于键的屏蔽
         // ---------------------------------------------------------------------------------
         public override void Load(string text)
         {
@@ -86,7 +87,14 @@ namespace MoleSplit
 
             var item = text.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var r = new Regex(@"=\((.+?)\)", RegexOptions.Compiled);
-            for (int i = 0; i < item.Length; i++)
+
+            int i = 0;
+            if (item[0] == "LOCKING_BOND")
+            {
+                this._isLockingBond = true;
+                i = 1;
+            }
+            for (; i < item.Length; i++)
             {
                 string[] temp = r.Match(item[i]).Groups[1].Value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries); // 提取附加坐标
                 int[] tempInt = new int[temp.Length];
@@ -129,6 +137,7 @@ namespace MoleSplit
                 this.MatchCore(() =>
                 {
                     result.Add(this._matched[0]);
+                    if (this._isLockingBond) { this.LockingBond(); }
                     //this._Sign++; // 每匹配完一个基团（包括相同的基团第二次匹配）就自增一次
                 });
                 for (int j = 0; j < result.Count; j++)
@@ -284,6 +293,23 @@ namespace MoleSplit
                 }
             }
             return true;
+        }
+        private void LockingBond()
+        {
+            int sign;
+            for (int i = 1; i < this._radical.AtomCodeList.Length; i++)
+            {
+                for (int j = 0; j < this._radical.AdjMat[i - 1].Length; j++)
+                {
+                    if (this._radical.AdjMat[i - 1][j] != 0)
+                    {
+                        sign = (this.Molecule.BondState[this._matched[i], this._matched[j]] == 0 
+                            && this.Molecule.BondState[this._matched[i], this._matched[j]] == 0) ? 1 : -2;
+                        base.Molecule.BondState[this._matched[i], this._matched[j]] = sign;
+                        base.Molecule.BondState[this._matched[j], this._matched[i]] = sign;
+                    }
+                }
+            }
         }
     }
 }

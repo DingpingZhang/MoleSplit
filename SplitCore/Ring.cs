@@ -64,11 +64,14 @@ namespace MoleSplit
                         break;
                     case "SAT_C_RING": this.Sign_C_RING(item.Value, "^C111?");
                         break;
+                    case "SIGN_RING_BOND": this.Sign_Ring_Bond();
+                        break;
                     default:
                         break;
                 }
             }
         }
+        // ---------------------------------------------------------------------------------------
         private void Sign_RING(string sign)
         {
             this.SerachCore();
@@ -106,7 +109,30 @@ namespace MoleSplit
                 }
             }
         }
+        private void Sign_Ring_Bond()
+        {
+            var result = this.GetEachRing();
+            if (result.Length == 0)
+            {
+                this.SerachCore();
+                result = new int[1][];
+                result[0] = this._ringAtom.ToArray();
+            }
+            int p_1, p_2, sign;
+            for (int i = 0; i < result.Length; i++)
+            {
+                for (int j = 0; j < result[i].Length; j++)
+                {
+                    p_1 = result[i][j];
+                    p_2 = (j < result[i].Length - 1) ? result[i][j + 1] : result[i][0];
+                    sign = (this.Molecule.BondState[p_1, p_2] == 0 && this.Molecule.BondState[p_2, p_1] == 0) ? -1 : -2;
 
+                    this.Molecule.BondState[p_1, p_2] = sign;
+                    this.Molecule.BondState[p_2, p_1] = sign;
+                }
+            }
+        }
+        // ---------------------------------------------------------------------------------------
         public int[][] GetEachRing()
         {
             if (base.Molecule.NRing < 2) { return new int[0][]; }

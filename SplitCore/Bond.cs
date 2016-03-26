@@ -40,7 +40,8 @@ namespace MoleSplit
             {
                 for (int j = 0; j < i; j++)
                 {
-                    if (base.Molecule.AdjMat[i, j] != 0 && base.Molecule.BondState[i, j] == 0)
+                    if (base.Molecule.AdjMat[i, j] != 0
+                    && (base.Molecule.BondState[i, j] == -1 || base.Molecule.BondState[i, j] == 0))
                     {
                         var atom_1 = r.Match(base.Molecule.AtomList[i]).Value;
                         var atom_2 = r.Match(base.Molecule.AtomList[j]).Value;
@@ -54,7 +55,7 @@ namespace MoleSplit
                         {
                             if (this._bondTag.ContainsKey(type_1))
                             {
-                                type_1 += this.RecAttribute(this._bondTag[type_1], i, j);
+                                type_1 += this.Molecule.BondState[i, j] < 0 ? '_' + this._bondTag[type_1] : "";
                             }
                             if (!base.DefinedFragment.ContainsKey(type_1)) { base.DefinedFragment.Add(type_1, 0); }
                             base.DefinedFragment[type_1]++;
@@ -80,12 +81,6 @@ namespace MoleSplit
             }
         }
         // ---------------------------------------------------------------------------------
-        private string RecAttribute(string attributeTag, int index_i, int index_j)
-        {
-            return this.Molecule.AtomList[index_i].Contains(attributeTag) 
-                && this.Molecule.AtomList[index_j].Contains(attributeTag) ? 
-                '_' + attributeTag : "";
-        }
         private Dictionary<string, int> Bond_H()
         {
             var dict = new Dictionary<string, int>() { { "C", 4 }, { "Si", 4 }, { "O", 2 }, { "N", 3 }, { "S", 2 } };

@@ -29,14 +29,9 @@ namespace MoleSplit
         public int[] AtomState { get; set; }
 
         /// <summary>
-        /// 化学键状态
+        /// 设置或获取化学键状态
         /// </summary>
         public int[,] BondState { get; set; }
-
-        /// <summary>
-        /// 设置或获取是否启用基于化学键的屏蔽策略
-        /// </summary>
-        public bool IsUseBondLock { get; set; }
 
         /// <summary>
         /// 电荷标记（在H统计中用到）
@@ -71,7 +66,6 @@ namespace MoleSplit
             this.AtomList = new string[nAtom];
             this.AtomState = new int[nAtom];
             this.BondState = new int[nAtom, nAtom];
-            this.IsUseBondLock = false; // 默认不启用基于键的屏蔽
             this.Charge = new int[nAtom];
             this.NRing = (nSide - nAtom + 1);
 
