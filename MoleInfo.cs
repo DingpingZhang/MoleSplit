@@ -30,6 +30,10 @@ namespace MoleSplit
 
         /// <summary>
         /// 设置或获取化学键状态
+        /// 0：未尝用也；
+        /// 1：不是环上的键，但已被使用
+        /// -1：是环上的键，未尝用也；
+        /// -2：既是换上的键，也已被使用
         /// </summary>
         public int[,] BondState { get; set; }
 

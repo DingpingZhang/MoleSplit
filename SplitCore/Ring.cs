@@ -18,6 +18,7 @@ namespace MoleSplit
         private List<int[]> _reOrder;// 逆序表
         private int[,] _lockSide;// 记录走过的边
         // ---------------------------------------------------------------------------------
+
         public override void Load(string text)
         {
             this._attributeTag = new Dictionary<string, string>();
@@ -38,6 +39,7 @@ namespace MoleSplit
                 }
             }
         }
+
         public override void Parse()
         {
             if (!this._isGetEachRing) { return; }
@@ -50,6 +52,7 @@ namespace MoleSplit
                 base.DefinedFragment[temp]++;
             }
         }
+
         public void AddAttribute()
         {
             if (this._attributeTag == null) { return; }
@@ -58,73 +61,55 @@ namespace MoleSplit
             {
                 switch (item.Key)
                 {
-                    case "RING": this.Sign_RING(item.Value);
+                    case "RING": this.SignRing(this.GetRing(), item.Value);
                         break;
-                    case "C_RING": this.Sign_C_RING(item.Value, "^C");
+                    case "C_RING": this.SignRing(this.GetRing("^C"), item.Value);
                         break;
-                    case "SAT_C_RING": this.Sign_C_RING(item.Value, "^C111?");
+                    case "SAT_C_RING": this.SignRing(this.GetRing("^C111?"), item.Value);
                         break;
-                    case "SIGN_RING_BOND": this.Sign_Ring_Bond();
+                    case "RING_BOND": this.SignRing(this.GetRing("."));
+                        break;
+                    case "C_RING_BOND": this.SignRing(this.GetRing("^C"));
+                        break;
+                    case "SAT_C_RING_BOND": this.SignRing(this.GetRing("^C111?"));
                         break;
                     default:
                         break;
                 }
             }
         }
-        // ---------------------------------------------------------------------------------------
-        private void Sign_RING(string sign)
-        {
-            this.SerachCore();
-            for (int i = 0; i < this._ringAtom.Count; i++)
-            {
-                base.Molecule.AtomList[this._ringAtom[i]] += sign;
-            }
-        }
-        private void Sign_C_RING(string sign, string regex)
-        {
-            var result = this.GetEachRing();
-            if (result.Length == 0)
-            {
-                this.SerachCore();
-                result = new int[1][];
-                result[0] = this._ringAtom.ToArray();
-            }
 
-            var r = new Regex(regex);
-            for (int i = 0; i < result.Length; i++)
+        // ---------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// 为给定的一组环标记（基于点）
+        /// </summary>
+        /// <param name="ringList">环索引组</param>
+        /// <param name="tag">属性标记</param>
+        private void SignRing(int[][] ringList, string tag)
+        {
+            for (int i = 0; i < ringList.Length; i++)
             {
-                bool b = false;
-                for (int j = 0; j < result[i].Length; j++)
+                for (int j = 0; j < ringList[i].Length; j++)
                 {
-                    if (!r.IsMatch(this.Molecule.AtomList[result[i][j]]))
-                    {
-                        b = true;
-                        continue;
-                    }
-                }
-                if (b) { continue; }
-                for (int j = 0; j < result[i].Length; j++)
-                {
-                    base.Molecule.AtomList[result[i][j]] += sign;
+                    base.Molecule.AtomList[ringList[i][j]] += tag;
                 }
             }
         }
-        private void Sign_Ring_Bond()
+
+        /// <summary>
+        /// 为给定的一组环标记（基于边）
+        /// </summary>
+        /// <param name="ringList"></param>
+        private void SignRing(int[][] ringList)
         {
-            var result = this.GetEachRing();
-            if (result.Length == 0)
-            {
-                this.SerachCore();
-                result = new int[1][];
-                result[0] = this._ringAtom.ToArray();
-            }
             int p_1, p_2, sign;
-            for (int i = 0; i < result.Length; i++)
+            for (int i = 0; i < ringList.Length; i++)
             {
-                for (int j = 0; j < result[i].Length; j++)
+                for (int j = 0; j < ringList[i].Length; j++)
                 {
-                    p_1 = result[i][j];
-                    p_2 = (j < result[i].Length - 1) ? result[i][j + 1] : result[i][0];
+                    p_1 = ringList[i][j];
+                    p_2 = (j < ringList[i].Length - 1) ? ringList[i][j + 1] : ringList[i][0];
                     sign = (this.Molecule.BondState[p_1, p_2] == 0 && this.Molecule.BondState[p_2, p_1] == 0) ? -1 : -2;
 
                     this.Molecule.BondState[p_1, p_2] = sign;
@@ -132,31 +117,67 @@ namespace MoleSplit
                 }
             }
         }
-        // ---------------------------------------------------------------------------------------
-        public int[][] GetEachRing()
+
+        /// <summary>
+        /// 给出分子中所有在环上的原子索引（无法区别每个环）
+        /// </summary>
+        /// <returns>原子索引数组列表</returns>
+        private int[][] GetRing()
         {
-            if (base.Molecule.NRing < 2) { return new int[0][]; }
-            this._isGetEachRing = true;
-            this.SerachCore();
-            var ringIndexs = new int[this._order.Count][];
-            int[] temp = null;
-            for (int i = 0; i < this._order.Count; i++)
+            if (this._ringAtom == null)
             {
-                temp = new int[this._order[i][0]];
-                int current_p = 1; while (this._order[i][current_p] == 0) { current_p++; }
-                int head_p = current_p;
-                for (int j = 0; this._order[i][current_p] != head_p; j++)
-                {
-                    temp[j] = current_p - 1;
-                    current_p = this._order[i][current_p];
-                }
-                temp[temp.Length - 1] = current_p - 1;
-                ringIndexs[i] = temp;
+                this.SerachCore();
             }
-            this._isGetEachRing = false;
-            return ringIndexs;
+            return new int[1][] { this._ringAtom.ToArray() };
         }
-        // ---------------------------------------------------------------------------------
+
+        /// <summary>
+        /// 按照传入的正则表达式，给出符合要求的环列表（可区分每个环）
+        /// </summary>
+        /// <param name="regex">环上原子需满足的正则表达式</param>
+        /// <returns>原子索引数组列表</returns>
+        private int[][] GetRing(string regex)
+        {
+            int[][] result;
+            switch (base.Molecule.NRing)
+            {
+                case 0: result = new int[0][]; break;
+                case 1: result = this.GetRing(); break;
+                default:
+                    {
+                        this._isGetEachRing = true;
+                        this.SerachCore();
+                        List<int[]> tempResult = new List<int[]>();
+                        Regex r = new Regex(regex);
+                        int[] tempRing;
+                        for (int i = 0; i < this._order.Count; i++)
+                        {
+                            tempRing = new int[this._order[i][0]];
+                            int current_p = 1; while (this._order[i][current_p] == 0) { current_p++; }
+                            bool isAdd = true;
+                            int head_p = current_p, p = 0;
+                            do
+                            {
+                                if (!r.IsMatch(base.Molecule.AtomList[current_p - 1]))
+                                {
+                                    isAdd = false;
+                                    break;
+                                }
+                                tempRing[p] = current_p - 1;
+                                current_p = this._order[i][current_p];
+                                p++;
+                            } while (current_p != head_p);
+                            if (isAdd) { tempResult.Add(tempRing); }
+                        }
+                        this._isGetEachRing = false;
+                        result = tempResult.ToArray();
+                    } break;
+            }
+            return result;
+        }
+
+        // Core ---------------------------------------------------------------------------------
+
         private void SerachCore()
         {
             this._order = new List<int[]>();
@@ -166,6 +187,7 @@ namespace MoleSplit
             if (base.Molecule.NRing == 0) { return; }
             this.SearchRing(new List<int>(), 0);
         }
+
         private void SearchRing(List<int> path, int current_p)
         {
             for (int i = 0; i < path.Count; i++)
@@ -197,6 +219,7 @@ namespace MoleSplit
                 }
             }
         }
+
         private void RecordRing(List<int> path, int p)
         {
             int[] temp_o = new int[base.Molecule.AtomList.Length + 1];
@@ -218,6 +241,7 @@ namespace MoleSplit
             this._order.Add(temp_o);
             this._reOrder.Add(temp_reO);
         }
+
         private void RepelRing()
         {
             for (int i = 0; i < this._order.Count - 1; i++)
