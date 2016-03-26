@@ -124,10 +124,7 @@ namespace MoleSplit
         /// <returns>原子索引数组列表</returns>
         private int[][] GetRing()
         {
-            if (this._ringAtom == null)
-            {
-                this.SerachCore();
-            }
+            this.SerachCore();
             return new int[1][] { this._ringAtom.ToArray() };
         }
 
