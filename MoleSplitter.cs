@@ -61,10 +61,37 @@ namespace MoleSplit
             this._recognizer = new List<ARecognizer>();
             for (int i = 0; i < temp.Length; i += 2)
             {
-                var tempObj = (ARecognizer)Activator.CreateInstance(Type.GetType("MoleSplit." + temp[i]));
-                tempObj.Load(temp[i + 1]);
-                this._recognizer.Add(tempObj);
+                //var tempObj = (ARecognizer)Activator.CreateInstance(Type.GetType("MoleSplit." + temp[i]));
+                //tempObj.Load(temp[i + 1]);
+                this._recognizer.Add(this.ProductParser(temp[i], temp[i + 1]));
             }
+        }
+
+        /// <summary>
+        /// 创建识别器的实例（放弃Activator.CreateInstance()创建而选择switch-case创建，是为了解决使用代码混淆器加密后，类名被替换的问题）
+        /// </summary>
+        /// <param name="className">识别器名称</param>
+        /// <param name="param">识别器所需的参数</param>
+        /// <returns>一个识别器实例</returns>
+        private ARecognizer ProductParser(string className, string param)
+        {
+            ARecognizer recognizer;
+            switch (className)
+            {
+                case "Radical": recognizer = new Radical();
+                    break;
+                case "Ring": recognizer = new Ring();
+                    break;
+                case "Atom": recognizer = new Atom();
+                    break;
+                case "Bond": recognizer = new Bond();
+                    break;
+                case "Element": recognizer = new Element();
+                    break;
+                default: throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
+            }
+            recognizer.Load(param);
+            return recognizer;
         }
 
         /// <summary>
