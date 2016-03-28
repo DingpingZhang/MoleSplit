@@ -55,9 +55,11 @@ namespace MoleSplit
                 {
                     string[] element = info[i].Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     string regexStr = '^' + element[0];
-                    regexStr = regexStr.Replace("_", "_(_.+?)*_");
+
+                    regexStr = regexStr.Replace("_", "_(_.+?_)*_");
                     regexStr = regexStr.Replace("$", @"_$");
-                    if (regexStr.Length - 1 == element[0].Length) { regexStr += '_'; }
+                    if (regexStr[regexStr.Length - 1] != '$') { regexStr += '_'; }
+
                     this.AtomCodeList[i - 1] = new Regex(regexStr, RegexOptions.Compiled);
                     int[] temp = new int[i - 1];
                     for (int k = 0; k < temp.Length; k++)
