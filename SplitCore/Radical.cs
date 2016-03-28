@@ -16,24 +16,29 @@ namespace MoleSplit
             /// 基团名称
             /// </summary>
             public string Name { get; private set; }
+
             /// <summary>
             /// 待判断的基团属性
             /// </summary>
-            public string[] Tag { get; private set; }
+            //public string[] Tag { get; private set; }
+
             /// <summary>
             /// 基团邻接矩阵的条件：
             /// (1)第一个元素必须是与母体相连的原子（一般为C）；
             /// (2)原子顺序必须逐层排列
             /// </summary>
             public int[][] AdjMat { get; private set; }
+
             /// <summary>
             /// 原子列表（对应邻接矩阵）
             /// </summary>
             public Regex[] AtomCodeList { get; private set; }
+
             /// <summary>
             /// 重命名原子 或 辅助定位原子的坐标
             /// </summary>
             public int[] SpecialAtom { get; set; }
+
             public Subgraph(string text)
             {
                 var info = text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -42,15 +47,15 @@ namespace MoleSplit
                 this.AdjMat = new int[info.Length - 2][];
                 this.AtomCodeList = new Regex[info.Length - 1];
                 this.Name = tags[0];
-                this.Tag = new string[0];
-                if (tags.Length > 1)
-                {
-                    this.Tag = new string[tags.Length - 1];
-                    for (int i = 0; i < this.Tag.Length; i++)
-                    {
-                        this.Tag[i] = tags[i + 1];
-                    }
-                }
+                //this.Tag = new string[0];
+                //if (tags.Length > 1)
+                //{
+                //    this.Tag = new string[tags.Length - 1];
+                //    for (int i = 0; i < this.Tag.Length; i++)
+                //    {
+                //        this.Tag[i] = tags[i + 1];
+                //    }
+                //}
                 for (int i = 1; i < info.Length; i++)
                 {
                     string[] element = info[i].Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -82,6 +87,7 @@ namespace MoleSplit
         private bool[] _lock; // 在原子的匹配过程中锁住正在使用的原子
         private bool _isLockingBond; // 是否启用基于键的屏蔽
         // ---------------------------------------------------------------------------------
+
         public override void Load(string text)
         {
             this._radicalToMatch = new List<Subgraph>();
@@ -127,6 +133,7 @@ namespace MoleSplit
                 }
             }
         }
+
         public override void Parse()
         {
             this._nAtom = base.Molecule.AtomList.Length; // 取出原子个数，性能分析指出：此项使用调用极为频繁，若调用属性（函数）将大大拖慢程序
@@ -148,13 +155,14 @@ namespace MoleSplit
                 });
                 for (int j = 0; j < result.Count; j++)
                 {
-                    var tempName = (this._radical.Name + this.RecAttribute(this._radical.Tag, result[j])).Replace("*", ""); // 进行属性判断
+                    var tempName = (this._radical.Name/* + this.RecAttribute(this._radical.Tag, result[j])*/).Replace("*", ""); // 进行属性判断
                     if (!base.DefinedFragment.ContainsKey(tempName)) { base.DefinedFragment.Add(tempName, 0); }
                     base.DefinedFragment[tempName]++; // 装入结果
                 }
                 // -----------------------------------------------------
             }
         }
+
         private void AddAttribute()
         {
             this._sign = -1;
@@ -182,34 +190,35 @@ namespace MoleSplit
             }
         }
         // ---------------------------------------------------------------------------------
-        private string RecAttribute(string[] attributeTag, int index)
-        {
-            string attribute = "";
-            for (int i = 0; i < attributeTag.Length; i++)
-            {
-                if (attributeTag[i][0] != '-')
-                {
-                    attribute = base.Molecule.AtomList[index].Contains(attributeTag[i]) ? '_' + attributeTag[i] : "";
-                }
-                else
-                {
-                    string tempTag = attributeTag[i].Remove(0, 1);
-                    if (base.Molecule.AtomList[index].Contains(tempTag)) { continue; } // 1.自己不能含有该属性
-                    for (int j = 0; j < base.Molecule.AtomList.Length; j++)
-                    {
-                        if (this.Molecule.AdjMat[index, j] != 0
-                         && base.Molecule.AtomList[j].Contains(tempTag)) // 2.自己所连的原子中，具有该属性
-                        {
-                            attribute = '_' + attributeTag[i];
-                            break;
-                        }
-                    }
-                }
-                if (attribute != "") { return attribute; }
-            }
-            return "";
-        }
+        //private string RecAttribute(string[] attributeTag, int index)
+        //{
+        //    string attribute = "";
+        //    for (int i = 0; i < attributeTag.Length; i++)
+        //    {
+        //        if (attributeTag[i][0] != '-')
+        //        {
+        //            attribute = base.Molecule.AtomList[index].Contains(attributeTag[i]) ? '_' + attributeTag[i] : "";
+        //        }
+        //        else
+        //        {
+        //            string tempTag = attributeTag[i].Remove(0, 1);
+        //            if (base.Molecule.AtomList[index].Contains(tempTag)) { continue; } // 1.自己不能含有该属性
+        //            for (int j = 0; j < base.Molecule.AtomList.Length; j++)
+        //            {
+        //                if (this.Molecule.AdjMat[index, j] != 0
+        //                 && base.Molecule.AtomList[j].Contains(tempTag)) // 2.自己所连的原子中，具有该属性
+        //                {
+        //                    attribute = '_' + attributeTag[i];
+        //                    break;
+        //                }
+        //            }
+        //        }
+        //        if (attribute != "") { return attribute; }
+        //    }
+        //    return "";
+        //}
         // Core -------------------------------------------------------------------------------------
+
         private void MatchCore(Action operation)
         {
             if (this._nAtom < this._radical.AtomCodeList.Length) { return; }
@@ -299,6 +308,7 @@ namespace MoleSplit
             }
             return true;
         }
+
         private void LockingBond()
         {
             int sign;
