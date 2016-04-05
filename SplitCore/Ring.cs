@@ -42,13 +42,25 @@ namespace MoleSplit
             {
                 if (this._operType[i] == "PRINT")
                 {
-                    base.DefinedFragment = new Dictionary<string, int>();
-                    this.SerachCore();
-                    for (int j = 0; j < this._order.Count; j++)
+                    int[][] temp = new int[0][];
+                    switch (this._operObject[i])
                     {
-                        var temp = this._order[j][0].ToString() + '_' + this._operObject[i];
-                        if (!base.DefinedFragment.ContainsKey(temp)) { base.DefinedFragment.Add(temp, 0); }
-                        base.DefinedFragment[temp]++;
+                        case "RING": temp = GetRing(".");
+                            break;
+                        case "C_RING": temp = GetRing("^C");
+                            break;
+                        case "SAT_C_RING": temp = GetRing("^C1");
+                            break;
+                        default:
+                            break;
+                    }
+                    base.DefinedFragment = new Dictionary<string, int>();
+                    
+                    for (int j = 0; j < temp.Length; j++)
+                    {
+                        var name = temp[j].Length.ToString() + '_' + this._operObject[i];
+                        if (!base.DefinedFragment.ContainsKey(name)) { base.DefinedFragment.Add(name, 0); }
+                        base.DefinedFragment[name]++;
                     }
                 }
                 else
@@ -62,11 +74,11 @@ namespace MoleSplit
         {
             switch (operObject)
             {
-                case "RING": this.SignRing(this.GetRing(), operType);
+                case "RING": this.SignRing(this.GetRing("."), operType);
                     break;
                 case "C_RING": this.SignRing(this.GetRing("^C"), operType);
                     break;
-                case "SAT_C_RING": this.SignRing(this.GetRing("^C111?"), operType);
+                case "SAT_C_RING": this.SignRing(this.GetRing("^C1"), operType);
                     break;
                 case "RING_BOND": this.SignRing(this.GetRing("."));
                     break;
@@ -124,6 +136,7 @@ namespace MoleSplit
         /// <returns>原子索引数组列表</returns>
         private int[][] GetRing()
         {
+            this._isGetEachRing = false;
             this.SerachCore();
             return new int[1][] { this._ringAtom.ToArray() };
         }
@@ -145,32 +158,39 @@ namespace MoleSplit
                         this._isGetEachRing = true;
                         this.SerachCore();
                         List<int[]> tempResult = new List<int[]>();
-                        Regex r = new Regex(regex);
-                        int[] tempRing;
                         for (int i = 0; i < this._order.Count; i++)
                         {
-                            tempRing = new int[this._order[i][0]];
+                            int[] tempRing = new int[this._order[i][0]];
                             int current_p = 1; while (this._order[i][current_p] == 0) { current_p++; }
-                            bool isAdd = true;
                             int head_p = current_p, p = 0;
                             do
                             {
-                                if (!r.IsMatch(base.Molecule.AtomList[current_p - 1]))
-                                {
-                                    isAdd = false;
-                                    break;
-                                }
-                                tempRing[p] = current_p - 1;
+                                tempRing[p++] = current_p - 1;
                                 current_p = this._order[i][current_p];
-                                p++;
                             } while (current_p != head_p);
-                            if (isAdd) { tempResult.Add(tempRing); }
+                            tempResult.Add(tempRing);
                         }
-                        this._isGetEachRing = false;
                         result = tempResult.ToArray();
                     } break;
             }
-            return result;
+            List<int[]> temp = new List<int[]>();
+            Regex r = new Regex(regex);
+            for (int i = 0; i < result.Length; i++)
+            {
+                int j = 0;
+                for (; j < result[i].Length; j++)
+                {
+                    if (!r.IsMatch(base.Molecule.AtomList[result[i][j]]))
+                    {
+                        break;
+                    }
+                }
+                if (j==result[i].Length)
+                {
+                    temp.Add(result[i]);
+                }
+            }
+            return temp.ToArray();
         }
 
         // Core ---------------------------------------------------------------------------------

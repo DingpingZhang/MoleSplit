@@ -114,17 +114,24 @@ namespace MoleSplit
                 {
                     foreach (var item in this._recognizer[i].DefinedFragment)
                     {
-                        this.DefinedFragment.Add(item.Key, item.Value);
+                        if (!this.DefinedFragment.ContainsKey(item.Key))
+                        {
+                            this.DefinedFragment.Add(item.Key, item.Value);
+                        }
                     }
                 }
                 if (this._recognizer[i].UndefinedFragment != null && this._recognizer[i].UndefinedFragment.Count != 0)
                 {
                     foreach (var item in this._recognizer[i].UndefinedFragment)
                     {
-                        this.UndefineFragment.Add(item.Key, item.Value);
+                        if (!this.UndefineFragment.ContainsKey(item.Key))
+                        {
+                            this.UndefineFragment.Add(item.Key, item.Value);
+                        }
                     }
                 }
             }
         }
+
     }
 }
