@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MoleSplit
+namespace MoleSplit.SplitCore
 {
     /// <summary>
     /// 化学键识别器
