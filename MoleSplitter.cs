@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
 
-using MoleSplit;
+using MoleSplit.SplitCore;
 
 namespace MoleSplit
 {
