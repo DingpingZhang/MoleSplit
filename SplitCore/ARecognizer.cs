@@ -14,22 +14,26 @@ namespace MoleSplit.SplitCore
         /// 定义的碎片
         /// </summary>
         public Dictionary<string, int> DefinedFragment { get; protected set; }
+
         /// <summary>
         /// 未定义的碎片
         /// </summary>
         public Dictionary<string, int> UndefinedFragment { get; protected set; }
+
         /// <summary>
         /// 待解析的分子
         /// </summary>
         public MoleInfo Molecule { get; set; }
+
         /// <summary>
         /// 载入解析依据
         /// </summary>
         /// <param name="text">定义文件中的字段</param>
-        public virtual void Load(string text) { return; }
+        public abstract void Load(string text);
+
         /// <summary>
         /// 解析数据
         /// </summary>
-        public virtual void Parse() { return; }
+        public abstract void Parse();
     }
 }

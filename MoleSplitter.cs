@@ -99,6 +99,8 @@ namespace MoleSplit
         /// </summary>
         public void Parse()
         {
+            if (this._recognizer == null || this._molecule == null) { return; }
+
             // 1.进行解析
             for (int i = 0; i < this._recognizer.Count; i++)
             {

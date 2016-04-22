@@ -140,7 +140,7 @@ namespace MoleSplit.SplitCore
             this._lock = new bool[this._nAtom];
             base.DefinedFragment = new Dictionary<string, int>();
             // -----------------------------------------------------
-            this.AddAttribute();
+            this.AddAttribute(); // 标记属性
             // -----------------------------------------------------
             this._sign = 1;
             for (int i = 0; i < this._radicalToMatch.Count; i++)
@@ -155,7 +155,7 @@ namespace MoleSplit.SplitCore
                 });
                 for (int j = 0; j < result.Count; j++)
                 {
-                    var tempName = (this._radical.Name/* + this.RecAttribute(this._radical.Tag, result[j])*/).Replace("*", ""); // 进行属性判断
+                    var tempName = (this._radical.Name).Replace("*", "");
                     if (!base.DefinedFragment.ContainsKey(tempName)) { base.DefinedFragment.Add(tempName, 0); }
                     base.DefinedFragment[tempName]++; // 装入结果
                 }
@@ -189,34 +189,7 @@ namespace MoleSplit.SplitCore
                 base.Molecule.AtomState = new int[this._nAtom];
             }
         }
-        // ---------------------------------------------------------------------------------
-        //private string RecAttribute(string[] attributeTag, int index)
-        //{
-        //    string attribute = "";
-        //    for (int i = 0; i < attributeTag.Length; i++)
-        //    {
-        //        if (attributeTag[i][0] != '-')
-        //        {
-        //            attribute = base.Molecule.AtomList[index].Contains(attributeTag[i]) ? '_' + attributeTag[i] : "";
-        //        }
-        //        else
-        //        {
-        //            string tempTag = attributeTag[i].Remove(0, 1);
-        //            if (base.Molecule.AtomList[index].Contains(tempTag)) { continue; } // 1.自己不能含有该属性
-        //            for (int j = 0; j < base.Molecule.AtomList.Length; j++)
-        //            {
-        //                if (this.Molecule.AdjMat[index, j] != 0
-        //                 && base.Molecule.AtomList[j].Contains(tempTag)) // 2.自己所连的原子中，具有该属性
-        //                {
-        //                    attribute = '_' + attributeTag[i];
-        //                    break;
-        //                }
-        //            }
-        //        }
-        //        if (attribute != "") { return attribute; }
-        //    }
-        //    return "";
-        //}
+
         // Core -------------------------------------------------------------------------------------
 
         private void MatchCore(Action operation)
@@ -253,6 +226,7 @@ namespace MoleSplit.SplitCore
                 }
             }
         }
+
         private void Match_R(int n)
         {
             if (n == this._matched.Length)
@@ -296,6 +270,7 @@ namespace MoleSplit.SplitCore
                 }
             }
         }
+
         private bool Compare(int n, int[] matched)
         {
             for (int j = 0; j < n; j++)
