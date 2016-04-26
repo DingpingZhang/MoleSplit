@@ -139,27 +139,43 @@ namespace MoleSplit.SplitCore
             this._nAtom = base.Molecule.AtomList.Length; // 取出原子个数，性能分析指出：此项使用调用极为频繁，若调用属性（函数）将大大拖慢程序
             this._lock = new bool[this._nAtom];
             base.DefinedFragment = new Dictionary<string, int>();
-            // -----------------------------------------------------
             this.AddAttribute(); // 标记属性
-            // -----------------------------------------------------
             this._sign = 1;
             for (int i = 0; i < this._radicalToMatch.Count; i++)
             {
                 this._radical = this._radicalToMatch[i];
-                var result = new List<int>(); // 匹配出结果
+                int[] CurrentResult = new int[this._radical.AtomCodeList.Length];
+                List<string> lastR = new List<string>();
+                var count = 0; 
                 this.MatchCore(() =>
                 {
-                    result.Add(this._matched[0]);
-                    if (this._isLockingBond) { this.LockingBond(); }
-                    //this._Sign++; // 每匹配完一个基团（包括相同的基团第二次匹配）就自增一次
+                    if (this._radical.Name[0] == '*')
+                    {
+                        this._matched.CopyTo(CurrentResult, 0);
+                        Array.Sort(CurrentResult);// 对当前匹配结果进行排序
+                        string currentR = "";
+                        for (int n = 0; n < CurrentResult.Length; n++)
+                        {
+                            currentR += (CurrentResult[n] + ",");
+                        }
+                        if (this.IsRecord(currentR, lastR))// 对比这次的匹配结果是否与上次完全一致，如果一致则不记录该匹配，如果不一致则记录
+                        {
+                            count++;
+                        }
+                        lastR.Add(currentR);// 保存上次的匹配结果
+                    }
+                    else
+                    {
+                        count++;
+                    }
+                    if (this._isLockingBond) { this.LockingBond(); }// do some other things.
                 });
-                for (int j = 0; j < result.Count; j++)
+                for (int j = 0; j < count; j++)
                 {
                     var tempName = (this._radical.Name).Replace("*", "");
                     if (!base.DefinedFragment.ContainsKey(tempName)) { base.DefinedFragment.Add(tempName, 0); }
                     base.DefinedFragment[tempName]++; // 装入结果
                 }
-                // -----------------------------------------------------
             }
         }
 
@@ -300,6 +316,15 @@ namespace MoleSplit.SplitCore
                     }
                 }
             }
+        }
+
+        private bool IsRecord(string currentResult, List<string> lastResult)
+        {
+            for (int i = 0; i < lastResult.Count; i++)
+            {
+                if (lastResult[i] == currentResult) { return false; }
+            }
+            return true;
         }
     }
 }
