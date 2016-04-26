@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 化学键识别器
     /// </summary>
-    class Bond : ARecognizer
+    class Bond : RecognizerBase
     {
         // ---------------------------------------------------------------------------------
         private List<string> _bondPattern;
