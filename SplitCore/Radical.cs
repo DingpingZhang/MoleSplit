@@ -146,10 +146,10 @@ namespace MoleSplit.SplitCore
                 this._radical = this._radicalToMatch[i];
                 int[] CurrentResult = new int[this._radical.AtomCodeList.Length];
                 List<string> lastR = new List<string>();
-                var count = 0; 
+                var count = 0;
                 this.MatchCore(() =>
                 {
-                    if (this._radical.Name[0] == '*')
+                    if (CurrentResult.Length != 0)
                     {
                         this._matched.CopyTo(CurrentResult, 0);
                         Array.Sort(CurrentResult);// 对当前匹配结果进行排序
@@ -158,17 +158,17 @@ namespace MoleSplit.SplitCore
                         {
                             currentR += (CurrentResult[n] + ",");
                         }
-                        if (this.IsRecord(currentR, lastR))// 对比这次的匹配结果是否与上次完全一致，如果一致则不记录该匹配，如果不一致则记录
+                        if (this.IsRecord(currentR, lastR)) // 对比这次的匹配结果是否与上次完全一致，如果一致则不记录该匹配，如果不一致则记录
                         {
                             count++;
+                            lastR.Add(currentR); // 保存匹配结果
                         }
-                        lastR.Add(currentR);// 保存上次的匹配结果
                     }
                     else
                     {
                         count++;
                     }
-                    if (this._isLockingBond) { this.LockingBond(); }// do some other things.
+                    if (this._isLockingBond) { this.LockingBond(); } // do some other things.
                 });
                 for (int j = 0; j < count; j++)
                 {
@@ -214,7 +214,7 @@ namespace MoleSplit.SplitCore
             this._matched = new int[this._radical.AtomCodeList.Length];
             for (int i = 0; i < this._nAtom; i++)
             {
-                if ((base.Molecule.AtomState[i] == 0 
+                if ((base.Molecule.AtomState[i] == 0
                  || (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0)))
                  && this._radical.AtomCodeList[0].IsMatch(base.Molecule.AtomList[i]))
                 {
@@ -309,7 +309,7 @@ namespace MoleSplit.SplitCore
                 {
                     if (this._radical.AdjMat[i - 1][j] != 0)
                     {
-                        sign = (this.Molecule.BondState[this._matched[i], this._matched[j]] == 0 
+                        sign = (this.Molecule.BondState[this._matched[i], this._matched[j]] == 0
                             && this.Molecule.BondState[this._matched[i], this._matched[j]] == 0) ? 1 : -2;
                         base.Molecule.BondState[this._matched[i], this._matched[j]] = sign;
                         base.Molecule.BondState[this._matched[j], this._matched[i]] = sign;
