@@ -144,25 +144,33 @@ namespace MoleSplit.SplitCore
             for (int i = 0; i < this._radicalToMatch.Count; i++)
             {
                 this._radical = this._radicalToMatch[i];
-                int[] CurrentResult = new int[this._radical.AtomCodeList.Length];
-                List<string> lastR = new List<string>();
+                List<string> lastResults = new List<string>();
                 var count = 0;
                 this.MatchCore(() =>
                 {
-                    if (CurrentResult.Length != 0)
+                    if (this._radical.SpecialAtom.Length == this._radical.AtomCodeList.Length)
                     {
-                        this._matched.CopyTo(CurrentResult, 0);
-                        Array.Sort(CurrentResult);// 对当前匹配结果进行排序
-                        string currentR = "";
-                        for (int n = 0; n < CurrentResult.Length; n++)
-                        {
-                            currentR += (CurrentResult[n] + ",");
-                        }
-                        if (this.IsRecord(currentR, lastR)) // 对比这次的匹配结果是否与上次完全一致，如果一致则不记录该匹配，如果不一致则记录
+                        string strResult = "", strResult_Reverse = "";
+                        for (int j = 0; j < this._matched.Length; j++) { strResult += (this._matched[j] + ","); }
+                        Array.Reverse(this._matched);
+                        for (int j = 0; j < this._matched.Length; j++) { strResult_Reverse += (this._matched[j] + ","); }
+                        if (!lastResults.Contains(strResult))
                         {
                             count++;
-                            lastR.Add(currentR); // 保存匹配结果
+                            lastResults.Add(strResult_Reverse);
                         }
+                        //this._matched.CopyTo(CurrentResult, 0);
+                        //Array.Sort(CurrentResult);// 对当前匹配结果进行排序
+                        //string currentR = "";
+                        //for (int n = 0; n < CurrentResult.Length; n++)
+                        //{
+                        //    currentR += (CurrentResult[n] + ",");
+                        //}
+                        //if (this.IsRecord(currentR, lastR)) // 对比这次的匹配结果是否与上次完全一致，如果一致则不记录该匹配，如果不一致则记录
+                        //{
+                        //    count++;
+                        //    lastR.Add(currentR); // 保存匹配结果
+                        //}
                     }
                     else
                     {
@@ -316,15 +324,6 @@ namespace MoleSplit.SplitCore
                     }
                 }
             }
-        }
-
-        private bool IsRecord(string currentResult, List<string> lastResult)
-        {
-            for (int i = 0; i < lastResult.Count; i++)
-            {
-                if (lastResult[i] == currentResult) { return false; }
-            }
-            return true;
         }
     }
 }
