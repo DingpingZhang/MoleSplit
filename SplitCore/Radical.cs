@@ -148,33 +148,38 @@ namespace MoleSplit.SplitCore
                 var count = 0;
                 this.MatchCore(() =>
                 {
-                    if (this._radical.SpecialAtom.Length == this._radical.AtomCodeList.Length)
+                    int[] tempIntArray = null;
+                    if (this._radical.SpecialAtom.Length == this._radical.AtomCodeList.Length) // 全虚拟：虚拟原子不可相同
                     {
-                        string strResult = "", strResult_Reverse = "";
-                        for (int j = 0; j < this._matched.Length; j++) { strResult += (this._matched[j] + ","); }
-                        Array.Reverse(this._matched);
-                        for (int j = 0; j < this._matched.Length; j++) { strResult_Reverse += (this._matched[j] + ","); }
-                        if (!lastResults.Contains(strResult))
-                        {
-                            count++;
-                            lastResults.Add(strResult_Reverse);
-                        }
-                        //this._matched.CopyTo(CurrentResult, 0);
-                        //Array.Sort(CurrentResult);// 对当前匹配结果进行排序
-                        //string currentR = "";
-                        //for (int n = 0; n < CurrentResult.Length; n++)
-                        //{
-                        //    currentR += (CurrentResult[n] + ",");
-                        //}
-                        //if (this.IsRecord(currentR, lastR)) // 对比这次的匹配结果是否与上次完全一致，如果一致则不记录该匹配，如果不一致则记录
-                        //{
-                        //    count++;
-                        //    lastR.Add(currentR); // 保存匹配结果
-                        //}
+                        tempIntArray = this._matched;
                     }
-                    else
+                    else if (this._radical.SpecialAtom.Length != 0) // 部分虚拟：非虚拟原子不可相同，虚拟原子可以相同
+                    {
+                        tempIntArray = new int[this._radical.AtomCodeList.Length - this._radical.SpecialAtom.Length];
+                        for (int j = 0, p = 0; j < this._matched.Length; j++)
+                        {
+                            if (!this._radical.SpecialAtom.Contains(j))
+                            {
+                                tempIntArray[p++] = this._matched[j];
+                            }
+                        }
+                    }
+                    string str_ResultSort = "";
+                    if (tempIntArray != null)
+                    {
+                        Array.Sort(tempIntArray);
+                        for (int j = 0; j < tempIntArray.Length; j++)
+                        {
+                            str_ResultSort += (tempIntArray[j] + "/");
+                        }
+                    }
+                    if (!lastResults.Contains(str_ResultSort))
                     {
                         count++;
+                        if (str_ResultSort != "")
+                        {
+                            lastResults.Add(str_ResultSort);
+                        }
                     }
                     if (this._isLockingBond) { this.LockingBond(); } // do some other things.
                 });
