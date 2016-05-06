@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 环识别器
     /// </summary>
-    class Ring : ARecognizer
+    class Ring : RecognizerBase
     {
         private List<string> _operType;
         private List<string> _operObject;
@@ -122,7 +122,7 @@ namespace MoleSplit.SplitCore
                 {
                     p_1 = ringList[i][j];
                     p_2 = (j < ringList[i].Length - 1) ? ringList[i][j + 1] : ringList[i][0];
-                    sign = (this.Molecule.BondState[p_1, p_2] == 0 && this.Molecule.BondState[p_2, p_1] == 0) ? -1 : -2;
+                    sign = (this.Molecule.BondState[p_1, p_2] == 1 || this.Molecule.BondState[p_2, p_1] == 1) ? -2 : -1;
 
                     this.Molecule.BondState[p_1, p_2] = sign;
                     this.Molecule.BondState[p_2, p_1] = sign;

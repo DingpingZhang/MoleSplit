@@ -8,12 +8,12 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 化学键识别器
     /// </summary>
-    class Bond : ARecognizer
+    class Bond : RecognizerBase
     {
         // ---------------------------------------------------------------------------------
         private List<string> _bondPattern;
         private Dictionary<string, string> _bondTag;
-        private char[] _bondType = new char[] { '-', '=', '≡' };
+        private char[] _bondType = new char[] { '-', '=', '≡', '#' };
         // ---------------------------------------------------------------------------------
         public override void Load(string text)
         {
@@ -45,7 +45,8 @@ namespace MoleSplit.SplitCore
                     {
                         var atom_1 = r.Match(base.Molecule.AtomList[i]).Value;
                         var atom_2 = r.Match(base.Molecule.AtomList[j]).Value;
-                        var bondNum = base.Molecule.AdjMat[i, j] - 1;
+                        var bondNum = (base.Molecule.AdjMat[i, j] - 1) 
+                            + (base.Molecule.Charge[i] != 0 && base.Molecule.Charge[j] != 0 ? 1 : 0); // 如果键两端的原子带电荷，则相当于增加一个键
 
                         var type_1 = atom_1 + this._bondType[bondNum] + atom_2;
                         var type_2 = atom_2 + this._bondType[bondNum] + atom_1;

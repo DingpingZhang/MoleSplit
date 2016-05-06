@@ -29,7 +29,7 @@ namespace MoleSplit
         /// <summary>
         /// 解析器组
         /// </summary>
-        private List<ARecognizer> _recognizer;
+        private List<RecognizerBase> _recognizer;
 
         /// <summary>
         /// 加载mol文件
@@ -58,7 +58,7 @@ namespace MoleSplit
             {
                 temp = sr.ReadToEnd().Split(new char[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
             }
-            this._recognizer = new List<ARecognizer>();
+            this._recognizer = new List<RecognizerBase>();
             for (int i = 0; i < temp.Length; i += 2)
             {
                 //var tempObj = (ARecognizer)Activator.CreateInstance(Type.GetType("MoleSplit." + temp[i]));
@@ -73,9 +73,9 @@ namespace MoleSplit
         /// <param name="className">识别器名称</param>
         /// <param name="param">识别器所需的参数</param>
         /// <returns>一个识别器实例</returns>
-        private ARecognizer ProductParser(string className, string param)
+        private RecognizerBase ProductParser(string className, string param)
         {
-            ARecognizer recognizer;
+            RecognizerBase recognizer;
             switch (className)
             {
                 case "Radical": recognizer = new Radical();
@@ -99,6 +99,8 @@ namespace MoleSplit
         /// </summary>
         public void Parse()
         {
+            if (this._recognizer == null || this._molecule == null) { return; }
+
             // 1.进行解析
             for (int i = 0; i < this._recognizer.Count; i++)
             {
