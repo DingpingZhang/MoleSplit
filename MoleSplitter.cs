@@ -9,8 +9,44 @@ using MoleSplit.SplitCore;
 
 namespace MoleSplit
 {
+    /// <summary>
+    /// 拆分完成后处理事件
+    /// </summary>
+    /// <param name="sender">拆分器</param>
+    /// <param name="e">拆分结果</param>
+    public delegate void SplitEndEventHandler(object sender, SplitEndEventArgs e);
+
+    /// <summary>
+    /// 拆分后处理事件参数类
+    /// </summary>
+    public class SplitEndEventArgs
+    {
+        /// <summary>
+        /// 预定义碎片
+        /// </summary>
+        public Dictionary<string, int> DefinedFragment { get; set; }
+
+        /// <summary>
+        /// 未定义碎片
+        /// </summary>
+        public Dictionary<string, int> UndefinedFragment { get; set; }
+    }
+
+    /// <summary>
+    /// 分子自动拆分
+    /// </summary>
     public class MoleSplitter
     {
+        /// <summary>
+        /// 用于拆分完成后对结果进行进一步处理
+        /// </summary>
+        public event SplitEndEventHandler SplitEnd;
+
+        /// <summary>
+        /// 对于有特殊拆分要求的基团贡献法，可在客户端写拆分类，再赋值给特殊拆分器
+        /// </summary>
+        public RecognizerBase SpecialSplit { get; set; }
+
         /// <summary>
         /// 定义的分子片段
         /// </summary>
@@ -61,8 +97,6 @@ namespace MoleSplit
             this._recognizer = new List<RecognizerBase>();
             for (int i = 0; i < temp.Length; i += 2)
             {
-                //var tempObj = (ARecognizer)Activator.CreateInstance(Type.GetType("MoleSplit." + temp[i]));
-                //tempObj.Load(temp[i + 1]);
                 this._recognizer.Add(this.ProductParser(temp[i], temp[i + 1]));
             }
         }
@@ -78,17 +112,20 @@ namespace MoleSplit
             RecognizerBase recognizer;
             switch (className)
             {
-                case "Radical": recognizer = new Radical();
-                    break;
-                case "Ring": recognizer = new Ring();
-                    break;
-                case "Atom": recognizer = new Atom();
-                    break;
-                case "Bond": recognizer = new Bond();
-                    break;
-                case "Element": recognizer = new Element();
-                    break;
-                default: throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
+                case "Radical": recognizer = new Radical(); break;
+                case "Ring": recognizer = new Ring(); break;
+                case "Atom": recognizer = new Atom(); break;
+                case "Bond": recognizer = new Bond(); break;
+                case "Element": recognizer = new Element(); break;
+                default:
+                    if (this.SpecialSplit != null)
+                    {
+                        recognizer = this.SpecialSplit; break;
+                    }
+                    else
+                    {
+                        throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
+                    }
             }
             recognizer.Load(param);
             return recognizer;
@@ -133,7 +170,10 @@ namespace MoleSplit
                     }
                 }
             }
+            if (this.SplitEnd != null)
+            {
+                this.SplitEnd(this, new SplitEndEventArgs { DefinedFragment = this.DefinedFragment, UndefinedFragment = this.UndefineFragment });
+            }
         }
-
     }
 }

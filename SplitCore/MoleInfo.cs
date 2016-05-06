@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 将mol文件中的信息转化为可用字段
     /// </summary>
-    class MoleInfo
+    public class MoleInfo
     {
         /// <summary>
         /// 分子邻接矩阵

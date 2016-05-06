@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 环识别器
     /// </summary>
-    class Ring : RecognizerBase
+    public class Ring : RecognizerBase
     {
         private List<string> _operType;
         private List<string> _operObject;
