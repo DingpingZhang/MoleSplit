@@ -56,7 +56,7 @@ namespace MoleSplit.SplitCore
                 {
                     temp -= (bond[j] - 48);
                 }
-                H_Num += temp;
+                H_Num += (temp > 0 ? temp : 0);
             }
             return H_Num;
         }

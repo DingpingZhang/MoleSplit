@@ -22,6 +22,11 @@ namespace MoleSplit
     public class SplitEndEventArgs
     {
         /// <summary>
+        /// 当前被解析的分子
+        /// </summary>
+        public MoleInfo Molecule { get; set; }
+
+        /// <summary>
         /// 预定义碎片
         /// </summary>
         public Dictionary<string, int> DefinedFragment { get; set; }
@@ -172,7 +177,12 @@ namespace MoleSplit
             }
             if (this.SplitEnd != null)
             {
-                this.SplitEnd(this, new SplitEndEventArgs { DefinedFragment = this.DefinedFragment, UndefinedFragment = this.UndefineFragment });
+                this.SplitEnd(this, new SplitEndEventArgs
+                {
+                    Molecule = this._molecule,
+                    DefinedFragment = this.DefinedFragment,
+                    UndefinedFragment = this.UndefineFragment
+                });
             }
         }
     }
