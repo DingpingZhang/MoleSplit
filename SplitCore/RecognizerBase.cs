@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 识别器抽象类（所有识别器继承自该类）
     /// </summary>
-    public abstract class RecognizerBase
+    abstract class RecognizerBase
     {
         /// <summary>
         /// 定义的碎片

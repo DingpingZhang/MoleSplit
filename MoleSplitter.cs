@@ -12,9 +12,8 @@ namespace MoleSplit
     /// <summary>
     /// 拆分完成后处理事件
     /// </summary>
-    /// <param name="sender">拆分器</param>
     /// <param name="e">拆分结果</param>
-    public delegate void SplitEndEventHandler(object sender, SplitEndEventArgs e);
+    public delegate void SplitEndEventHandler(SplitEndEventArgs e);
 
     /// <summary>
     /// 拆分后处理事件参数类
@@ -42,15 +41,6 @@ namespace MoleSplit
     /// </summary>
     public class MoleSplitter
     {
-        /// <summary>
-        /// 用于拆分完成后对结果进行进一步处理
-        /// </summary>
-        public event SplitEndEventHandler SplitEnd;
-
-        /// <summary>
-        /// 对于有特殊拆分要求的基团贡献法，可在客户端写拆分类，再赋值给特殊拆分器
-        /// </summary>
-        public RecognizerBase SpecialSplit { get; set; }
 
         /// <summary>
         /// 定义的分子片段
@@ -62,15 +52,26 @@ namespace MoleSplit
         /// </summary>
         public Dictionary<string, int> UndefineFragment { get; protected set; }
 
+        // ------------------------------------------------------------------------------------
+
         /// <summary>
         /// 待解析的分子
         /// </summary>
         private MoleInfo _molecule;
 
+        // ------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// 用于拆分完成后对结果进行进一步处理
+        /// </summary>
+        public event SplitEndEventHandler SplitEnd;
+
         /// <summary>
         /// 解析器组
         /// </summary>
         private List<RecognizerBase> _recognizer;
+
+        // ------------------------------------------------------------------------------------
 
         /// <summary>
         /// 加载mol文件
@@ -103,6 +104,9 @@ namespace MoleSplit
             for (int i = 0; i < temp.Length; i += 2)
             {
                 this._recognizer.Add(this.ProductParser(temp[i], temp[i + 1]));
+                //var tempObj = (RecognizerBase)Activator.CreateInstance(Type.GetType("MoleSplit.SplitCore." + temp[i]));
+                //tempObj.Load(temp[i + 1]);
+                //this._recognizer.Add(tempObj);
             }
         }
 
@@ -123,11 +127,11 @@ namespace MoleSplit
                 case "Bond": recognizer = new Bond(); break;
                 case "Element": recognizer = new Element(); break;
                 default:
-                    if (this.SpecialSplit != null)
-                    {
-                        recognizer = this.SpecialSplit; break;
-                    }
-                    else
+                    //if (this.SpecialSplit != null)
+                    //{
+                    //    recognizer = this.SpecialSplit; break;
+                    //}
+                    //else
                     {
                         throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
                     }
@@ -142,7 +146,6 @@ namespace MoleSplit
         public void Parse()
         {
             if (this._recognizer == null || this._molecule == null) { return; }
-
             // 1.进行解析
             for (int i = 0; i < this._recognizer.Count; i++)
             {
@@ -159,9 +162,9 @@ namespace MoleSplit
                     foreach (var item in this._recognizer[i].DefinedFragment)
                     {
                         if (!this.DefinedFragment.ContainsKey(item.Key))
-                        {
                             this.DefinedFragment.Add(item.Key, item.Value);
-                        }
+                        else
+                            this.DefinedFragment[item.Key] += item.Value;
                     }
                 }
                 if (this._recognizer[i].UndefinedFragment != null && this._recognizer[i].UndefinedFragment.Count != 0)
@@ -169,21 +172,33 @@ namespace MoleSplit
                     foreach (var item in this._recognizer[i].UndefinedFragment)
                     {
                         if (!this.UndefineFragment.ContainsKey(item.Key))
-                        {
                             this.UndefineFragment.Add(item.Key, item.Value);
-                        }
+                        else
+                            this.UndefineFragment[item.Key] += item.Value;
                     }
                 }
             }
             if (this.SplitEnd != null)
             {
-                this.SplitEnd(this, new SplitEndEventArgs
+                this.SplitEnd(new SplitEndEventArgs
                 {
                     Molecule = this._molecule,
                     DefinedFragment = this.DefinedFragment,
                     UndefinedFragment = this.UndefineFragment
                 });
             }
+        }
+
+        /// <summary>
+        /// 清空加载的所有数据，包括分子结构信息和基团定义信息
+        /// </summary>
+        public void Clear()
+        {
+            this._molecule = null;
+            this.SplitEnd = null;
+            this._recognizer = null;
+            this.DefinedFragment = null;
+            this.UndefineFragment = null;
         }
     }
 }

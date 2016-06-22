@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 子图识别器
     /// </summary>
-    public class Radical : RecognizerBase
+    class Radical : RecognizerBase
     {
         private class Subgraph
         {
