@@ -1,0 +1,40 @@
+#Ring#
+
+SIGN=(RING_BOND)
+
+#Radical#LOCKING_BOND
+
+Ph_RING:
+C211?
+C211?  2
+C211?  1 0
+C211?  0 1 0
+C211?  0 0 2 0
+C211?  0 0 0 2 1
+
+#Bond#
+
+N-H
+S-H
+O-H
+C-H
+C-F
+O-O
+C-Cl
+C-Br
+C-I
+N-N
+C=O
+N=O
+C≡C
+C≡N
+C=C?R
+C-S?R
+C-O?R
+C-C?R
+C-N?R
+C=N?R
+
+#Element#
+
+C;H;O;N;S;F;Cl;Br;I;

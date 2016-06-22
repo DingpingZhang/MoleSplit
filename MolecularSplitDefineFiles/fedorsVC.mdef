@@ -1,0 +1,32 @@
+#Ring#
+
+PRINT=(RING)
+
+#Radical#
+
+O(alcohols)
+O1
+
+N(amines)
+N1
+
+N(amines)
+N11
+
+N
+N\d+
+
+O
+O\d+
+
+*Double_bond=(0,1)
+\w\d+
+\w\d+	2
+
+*Triple_bond=(0,1)
+\w\d+
+\w\d+	3
+
+#Element#
+
+C;H;F;Cl;Br;I;S

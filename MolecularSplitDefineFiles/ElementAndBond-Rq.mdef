@@ -1,0 +1,73 @@
+#Ring#
+
+SIGN=(RING_BOND)
+
+#Radical#LOCKING_BOND
+
+-NO2:
+N2(1|2)1
+O(1|2)		5
+O(1|2)		5 0
+
+-SO4:
+S2211
+O2		2
+O2		2 0
+O1		1 0 0
+O1		1 0 0 0
+
+-OSO2:
+S2211
+O2		2
+O2		2 0
+O11		1 0 0
+
+-PO4:
+P2111
+O2		2
+O11		1 0
+O11		1 0 0
+O11		1 0 0 0
+
+Ph_RING:
+C211?
+C211?  5
+C211?  5 0
+C211?  0 5 0
+C211?  0 0 5 0
+C211?  0 0 0 5 5
+
+#Bond#
+
+C≡C
+C=O
+O-O
+O-H
+C-H
+C-F
+C-Cl
+C-Br
+C-I
+C-P
+C-Si
+Si-Cl
+Si-H
+Si-N
+C=S
+S-S
+S-H
+S=O
+C≡N
+N-H
+N-N
+N-O
+N=N
+P=O
+N-P
+C-O?R
+C-C?R
+C=C?R
+C-S?R
+C-N?R
+C=N?R
+Si-O?R

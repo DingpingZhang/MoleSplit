@@ -1,0 +1,235 @@
+#Ring#
+
+PRINT=(RING)
+
+_R_=(RING)
+
+#Radical#
+
+_Ph_=(0,1,2,3,4,5)
+C211?
+C211?	5
+C211?	5 0
+C211?	0 5 0
+C211?	0 0 5 0
+C211?	0 0 0 5 5
+
+_A_=(0,1,2,3,4,5)
+(C|N)211?
+(C|N)211?	5
+(C|N)211?	5 0
+(C|N)211?	0 5 0
+(C|N)211?	0 0 5 0
+(C|N)211?	0 0 0 5 5
+
+-O-OC-CO-O(oxalate)
+C211
+C211	1
+O11		1 0
+O2		2 0 0
+O2		0 2 0 0
+O11		0 1 0 0 0
+
+-CO-O-CO-(anhydride)
+C211
+O11		1
+O2		2 0
+C211	0 1 0
+O2		0 0 0 2
+
+-COOH(acid)
+C211
+O2		2
+O1		1 0
+
+-COO-(ester)
+C211
+O11		1
+O2		2 0
+
+O=CH-(aldehyde)
+C21
+O2		2
+
+>C=O
+C211
+O2		2
+
+*-O-(aromatic)=(0)
+\w\d+?_A
+O11		1
+
+*-OH(aromatic)=(0)
+\w\d+?_A
+O1		1
+
+*-C≡N(aromatic)=(0)
+\w\d+?_A
+C31		1
+N3		0 3
+
+-C≡N
+C31
+N3		3
+
+*-NH2(aromatic)=(0)
+\w\d+?_A
+N1		1
+
+*>NH(aromatic)=(0)
+\w\d+?_A
+N11		1
+
+*>N-(aromatic)=(0)
+\w\d+?_A
+N111	1
+
+*-F(aromatic)=(0)
+\w\d+?_A
+F1		1
+
+*-I(aromatic)=(0)
+\w\d+?_A
+I1		1
+
+-S-S-
+S11
+S11		1
+
+*-F(perfluoro)=(1,2,3,4)
+F1
+(Si1|C1)\d+?	1
+F1				0 1
+F1				0 1 0
+F1				0 1 0 0
+
+*-F(trisubstituted)=(1,2,3)
+F1
+(Si1|C1)\d+?	1
+F1				0 1
+F1				0 1 0
+
+*-F(disubstituted)=(1,2)
+F1
+(Si1|C1)\d+?	1
+F1				0 1
+
+*-Cl(trisubstituted)=(1,2,3)
+Cl1
+(Si1|C1)\d+?	1
+Cl1				0 1
+Cl1				0 1 0
+
+*-Cl(disubstituted)=(0,1)
+Cl1
+(Si1|C1)\d+?	1
+Cl1				0 1
+
+*Adjacent_pairs_of_>CH-=(1)
+C111
+C111	1
+
+*-F(C=C)=(1,2)
+F1
+C211?		1
+C21?1?		0 2
+
+*>SI<(Siloxane)=(1)
+Si1111
+O11		1
+
+*>SI<(Siloxane,ring)=(1)
+Si1111_R
+O11		1
+
+*Heteroatom_in_the_ring=(0)
+[^C]\d+?_R
+
+Substitution_on_carbon_in_a_double_bond(nonaromatic)
+X
+
+*Orthosubstitution_in_a_benzene_ring=(0,1,2,3)
+C211_Ph
+C211_Ph			5
+\w\w?\d+(_R)?$	1 0
+\w\w?\d+$		0 1 0
+
+*Ring-Ring_attached=(0,1)
+X
+
+*Conjugation,per_double_bond=(0,1,2,3)
+\w2\d{0,2}(_R)?$
+\w211?(_R)?$		2
+\w211?(_R)?$		0 1
+\w2\d{0,2}(_R)?$	0 0 2
+
+#Atom#
+
+-CH3
+C1
+
+>CH2
+C11
+
+>CH-
+C111
+
+>C<
+C1111
+
+=CH2
+C2
+
+=CH-
+C21
+
+=C<
+C211
+
+≡CH
+C3
+
+≡C-
+C31
+
+=C=
+C22
+
+-O-
+O11
+
+-OH(alcohols)
+O1
+
+-NH2
+N1
+
+>NH
+N11
+
+>N-
+N111
+
+-N=
+N21
+
+-S-
+S11
+
+-SH
+S1
+
+-F
+F1
+
+-Cl
+Cl1
+
+-Br
+Br1
+
+-I
+I1
+
+>SI<
+Si1111

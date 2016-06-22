@@ -1,0 +1,88 @@
+#Ring#
+
+_R_=(RING)
+
+#Radical#
+
+-COOH
+C211	
+O2		2
+O1		1 0
+
+-COO-
+C211	
+O11	1
+O2		2 0
+
+HCOO-
+C21	
+O11		1
+O2		2 0
+
+-CHO
+C21	
+O2		2
+
+>C=O?R
+C211	
+O2		2
+
+-CN
+C31	
+N3		3
+
+#Atom#
+
+-CH3
+C1
+
+>CH2?R
+C11
+
+-F
+F1
+
+-Cl
+Cl1
+
+-Br
+Br1
+
+-S-?R
+S11
+
+-O-
+O11
+
+>CH-?R
+C111
+
+>C<?R
+C1111
+
+=C<?R
+C211
+
+=CH-?R
+C21
+
+=CH2
+C2
+
+≡CH
+C3
+
+≡C-
+C31
+
+-NH2
+N1
+
+-N=?R
+N21
+
+>NH
+N11
+
+-OH
+O1
