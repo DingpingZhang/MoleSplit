@@ -1,5 +1,8 @@
 # MoleSplit
 本项目是用于在以基团贡献法估算物性时，完成分子拆分任务的程序集，基于C#语言开发。
+
+***
+
 ## 1.介绍
 
 ![](https://raw.githubusercontent.com/DingpingZhang/MoleSplit/master/images/GroupContributionMethodProcess.png)
@@ -14,6 +17,7 @@
 
 ## 2.程序集的调用
 ### 2.1 一般使用
+
 
     using MoleSplit;
 
@@ -33,15 +37,18 @@
         }
     }
 
+
 ### 2.2 针对含有特殊基团的基团贡献法
 特殊基团是指所有在本程序集（SplitCore中提供的方法）识别范围之外的基团。在MoleSplitter类中提供了名为SplitEnd的事件，该事件接受MoleSplit.SplitEndEventHandler类型的委托。
 
 ![](https://raw.githubusercontent.com/DingpingZhang/MoleSplit/master/images/MoleSplitter.png)
 
+
     MoleSplit.SplitEndEventHandler additionalSplitOperation = new SplitEndEventHandler((splitResultArgs) =>
     {
         // Do something.
     });
+
 
 SplitEndEventHandler委托中接受的参数为MoleSplit.SplitEndEventArgs类型，其中含有三个属性。
 
