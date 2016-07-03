@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 原子识别器
     /// </summary>
-    class Atom : RecognizerBase
+    internal class Atom : RecognizerBase
     {
         // ---------------------------------------------------------------------------------
         private Dictionary<string, string> _atomPattern;

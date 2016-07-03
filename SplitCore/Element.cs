@@ -8,7 +8,7 @@ namespace MoleSplit.SplitCore
     /// <summary>
     /// 元素识别器
     /// </summary>
-    class Element : RecognizerBase
+    internal class Element : RecognizerBase
     {
         private string[] _elementPattern;
         // ---------------------------------------------------------------------------------
