@@ -3,24 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MoleSplit.SplitCore
+namespace MoleSplit.Core
 {
     /// <summary>
     /// 子图识别器
     /// </summary>
     internal class Radical : RecognizerBase
     {
+        /// <summary>
+        /// 储存子图的类
+        /// </summary>
         private class Subgraph
         {
             /// <summary>
             /// 基团名称
             /// </summary>
             public string Name { get; private set; }
-
-            /// <summary>
-            /// 待判断的基团属性
-            /// </summary>
-            //public string[] Tag { get; private set; }
 
             /// <summary>
             /// 基团邻接矩阵的条件：

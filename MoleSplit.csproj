@@ -39,14 +39,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MoleSplitter.cs" />
-    <Compile Include="SplitCore\RecognizerBase.cs" />
-    <Compile Include="SplitCore\MoleInfo.cs" />
+    <Compile Include="Core\RecognizerBase.cs" />
+    <Compile Include="Core\MoleInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SplitCore\Atom.cs" />
-    <Compile Include="SplitCore\Bond.cs" />
-    <Compile Include="SplitCore\Element.cs" />
-    <Compile Include="SplitCore\Ring.cs" />
-    <Compile Include="SplitCore\Radical.cs" />
+    <Compile Include="Core\Atom.cs" />
+    <Compile Include="Core\Bond.cs" />
+    <Compile Include="Core\Element.cs" />
+    <Compile Include="Core\Ring.cs" />
+    <Compile Include="Core\Radical.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

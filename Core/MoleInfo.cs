@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MoleSplit.SplitCore
+namespace MoleSplit.Core
 {
     /// <summary>
     /// 将mol文件中的信息转化为可用字段

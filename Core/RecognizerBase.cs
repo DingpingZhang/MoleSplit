@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MoleSplit.SplitCore
+namespace MoleSplit.Core
 {
     /// <summary>
     /// 识别器抽象类（所有识别器继承自该类）

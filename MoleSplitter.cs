@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
 
-using MoleSplit.SplitCore;
+using MoleSplit.Core;
 
 namespace MoleSplit
 {
@@ -103,10 +103,13 @@ namespace MoleSplit
             this._recognizer = new List<RecognizerBase>();
             for (int i = 0; i < temp.Length; i += 2)
             {
-                this._recognizer.Add(this.ProductParser(temp[i], temp[i + 1]));
-                //var tempObj = (RecognizerBase)Activator.CreateInstance(Type.GetType("MoleSplit.SplitCore." + temp[i]));
-                //tempObj.Load(temp[i + 1]);
-                //this._recognizer.Add(tempObj);
+                //this._recognizer.Add(this.ProductParser(temp[i], temp[i + 1]));
+                var tempObj = Activator.CreateInstance(Type.GetType("MoleSplit.Core." + temp[i])) as RecognizerBase;
+                if (tempObj != null)
+                {
+                    tempObj.Load(temp[i + 1]);
+                    this._recognizer.Add(tempObj);
+                }
             }
         }
 
@@ -116,29 +119,29 @@ namespace MoleSplit
         /// <param name="className">识别器名称</param>
         /// <param name="param">识别器所需的参数</param>
         /// <returns>一个识别器实例</returns>
-        private RecognizerBase ProductParser(string className, string param)
-        {
-            RecognizerBase recognizer;
-            switch (className)
-            {
-                case "Radical": recognizer = new Radical(); break;
-                case "Ring": recognizer = new Ring(); break;
-                case "Atom": recognizer = new Atom(); break;
-                case "Bond": recognizer = new Bond(); break;
-                case "Element": recognizer = new Element(); break;
-                default:
-                    //if (this.SpecialSplit != null)
-                    //{
-                    //    recognizer = this.SpecialSplit; break;
-                    //}
-                    //else
-                    {
-                        throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
-                    }
-            }
-            recognizer.Load(param);
-            return recognizer;
-        }
+        //private RecognizerBase ProductParser(string className, string param)
+        //{
+        //    RecognizerBase recognizer;
+        //    switch (className)
+        //    {
+        //        case "Radical": recognizer = new Radical(); break;
+        //        case "Ring": recognizer = new Ring(); break;
+        //        case "Atom": recognizer = new Atom(); break;
+        //        case "Bond": recognizer = new Bond(); break;
+        //        case "Element": recognizer = new Element(); break;
+        //        default:
+        //            //if (this.SpecialSplit != null)
+        //            //{
+        //            //    recognizer = this.SpecialSplit; break;
+        //            //}
+        //            //else
+        //            {
+        //                throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
+        //            }
+        //    }
+        //    recognizer.Load(param);
+        //    return recognizer;
+        //}
 
         /// <summary>
         /// 启动解析

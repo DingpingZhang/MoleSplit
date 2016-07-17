@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MoleSplit.SplitCore
+namespace MoleSplit.Core
 {
     /// <summary>
     /// 原子识别器
