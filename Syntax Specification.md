@@ -19,12 +19,12 @@ Definition information
 - 不计分子中的H原子；
 - 编码结构为：元素符号 + 化学键列表（1 – 单键、2 – 双键……以此类推）；
 - 化学键列表中的化学键按键数从大到小的顺序排列。
-![](https://raw.githubusercontent.com/DingpingZhang/MoleSplit/master/images/AtomicCode.png)
+![](/images/AtomicCode.png)
 
 ## 3.解析器
 ### 3.1Radical解析功能
 Radical是所有解析标签中最强大的一个，以基团-CON(CH3)2为例，如图5-3所示，图中灰色框中的内容为该基团在定义未见中的定义编码，其由三部分组成：基团签名、原子编码列表和基团邻接矩阵；图片描述了从基团结构图转化为定义编码的过程。
-![](https://raw.githubusercontent.com/DingpingZhang/MoleSplit/master/images/RadicalCode.png)
+![](/images/RadicalCode.png)
 
 #### 3.1.1基团签名
 基团签名可以包含的信息有：基团名称、辅助定位原子索引列表和三种标记：部分屏蔽、属性标记、编码重写标记。其书写位置位于整个基团定义编码的第一行。
