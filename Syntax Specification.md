@@ -31,7 +31,7 @@ Radical是所有解析标签中最强大的一个，以基团-CON(CH3)2为例，
 
 
 |功能描述|语法规则|
-|-|-|
+|--------|--------|
 |完全屏蔽匹配|`RadicalName`|
 |部分屏蔽匹配|`*RadicalName=(AtomIndex1,AtomIndex2,...)`|
 |属性标记|`_AttributeTag_=(AtomIndex1,AtomIndex2,...)`|
@@ -48,7 +48,7 @@ Radical是所有解析标签中最强大的一个，以基团-CON(CH3)2为例，
 
 
 |功能描述|语法规则|
-|-|-|
+|--------|--------|
 |普通匹配|`AtomCode`|
 |属性匹配|`AtomCode_AttributeTag1_AttributeTag2…`|
 |限制属性匹配|`AtomCode$ / AtomCode_AttributeTag1$`|
@@ -77,7 +77,7 @@ Ring解析器提供了有关环结构的统计和属性标记功能。有必要�
 
 
 |功能描述|语法规则|
-|-|-|
+|--------|--------|
 |输出多元环的统计结果|`PRINT=(RING)`|
 |输出多元碳环的统计结果|`PRINT=(C_RING)`|
 |输出饱和多元碳环的统计结果|`PRINT=(SAT_C_RING)`|
@@ -88,7 +88,7 @@ Ring解析器提供了有关环结构的统计和属性标记功能。有必要�
 
 
 |功能描述|语法规则|
-|-|-|
+|--------|--------|
 |标记环原子|`_CUSTOM LABEL_=(RING)`|
 |标记碳环原子|`_CUSTOM LABEL_=(C_RING)`|
 |标记饱和碳环原子|`_CUSTOM LABEL_=(SAT_C_RING)`|
@@ -99,7 +99,7 @@ Ring解析器提供了有关环结构的统计和属性标记功能。有必要�
 
 
 |功能描述|语法规则|
-|-|-|
+|--------|--------|
 |标记环上的键|`SIGN=(RING_BOND)`|
 |标记碳环上的键|`SIGN=(C_RING_BOND)`|
 |标记饱和碳环上的键|`SIGN=(SAT_C_RING_BOND)`|
