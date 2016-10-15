@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.IO;
-using System.Reflection;
-
+using System.Text.RegularExpressions;
 using MoleSplit.Core;
 
 namespace MoleSplit
@@ -69,7 +66,7 @@ namespace MoleSplit
         /// <summary>
         /// 解析器组
         /// </summary>
-        private List<RecognizerBase> _recognizer;
+        private List<RecognizerBase> _recognizerList;
 
         // ------------------------------------------------------------------------------------
 
@@ -80,9 +77,9 @@ namespace MoleSplit
         public void LoadMolFile(string filePath)
         {
             if (!(File.Exists(filePath) && new Regex(".mol$").IsMatch(filePath))) { return; }
-            using (StreamReader sr = new StreamReader(filePath))
+            using (var sr = new StreamReader(filePath))
             {
-                this._molecule = new MoleInfo(sr.ReadToEnd());
+                _molecule = new MoleInfo(sr.ReadToEnd());
             }
         }
 
@@ -92,104 +89,70 @@ namespace MoleSplit
         /// <param name="filePath"></param>
         public void LoadDefineFile(string filePath)
         {
-            if (this._molecule != null) { this._molecule.AtomState = new int[this._molecule.AtomState.Length]; }
+            if (_molecule != null) { _molecule.AtomState = new int[_molecule.AtomState.Length]; }
 
             if (!(File.Exists(filePath) && new Regex(".mdef$").IsMatch(filePath))) { return; }
             string[] temp;
-            using (StreamReader sr = new StreamReader(filePath))
+            using (var sr = new StreamReader(filePath))
             {
-                temp = sr.ReadToEnd().Split(new char[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
+                temp = sr.ReadToEnd().Split(new[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
             }
-            this._recognizer = new List<RecognizerBase>();
-            for (int i = 0; i < temp.Length; i += 2)
+            _recognizerList = new List<RecognizerBase>();
+            for (var i = 0; i < temp.Length; i += 2)
             {
-                //this._recognizer.Add(this.ProductParser(temp[i], temp[i + 1]));
-                var tempObj = Activator.CreateInstance(Type.GetType("MoleSplit.Core." + temp[i])) as RecognizerBase;
-                if (tempObj != null)
-                {
-                    tempObj.Load(temp[i + 1]);
-                    this._recognizer.Add(tempObj);
-                }
+                var tempType = Type.GetType("MoleSplit.Core." + temp[i]);
+                if (tempType == null) continue;
+                var tempInstance = Activator.CreateInstance(tempType) as RecognizerBase;
+                if (tempInstance == null) continue;
+                tempInstance.Load(temp[i + 1]);
+                _recognizerList.Add(tempInstance);
             }
         }
-
-        /// <summary>
-        /// 创建识别器的实例（放弃Activator.CreateInstance()创建而选择switch-case创建，是为了解决使用代码混淆器加密后，类名被替换的问题）
-        /// </summary>
-        /// <param name="className">识别器名称</param>
-        /// <param name="param">识别器所需的参数</param>
-        /// <returns>一个识别器实例</returns>
-        //private RecognizerBase ProductParser(string className, string param)
-        //{
-        //    RecognizerBase recognizer;
-        //    switch (className)
-        //    {
-        //        case "Radical": recognizer = new Radical(); break;
-        //        case "Ring": recognizer = new Ring(); break;
-        //        case "Atom": recognizer = new Atom(); break;
-        //        case "Bond": recognizer = new Bond(); break;
-        //        case "Element": recognizer = new Element(); break;
-        //        default:
-        //            //if (this.SpecialSplit != null)
-        //            //{
-        //            //    recognizer = this.SpecialSplit; break;
-        //            //}
-        //            //else
-        //            {
-        //                throw new MemberAccessException("程序集中不存在名称为" + className + "的识别器。");
-        //            }
-        //    }
-        //    recognizer.Load(param);
-        //    return recognizer;
-        //}
 
         /// <summary>
         /// 启动解析
         /// </summary>
         public void Parse()
         {
-            if (this._recognizer == null || this._molecule == null) { return; }
+            if (_recognizerList == null || _molecule == null) { return; }
             // 1.进行解析
-            for (int i = 0; i < this._recognizer.Count; i++)
+            foreach (var recognizer in _recognizerList)
             {
-                this._recognizer[i].Molecule = this._molecule;
-                this._recognizer[i].Parse();
+                recognizer.Molecule = _molecule;
+                recognizer.Parse();
             }
             // 2.结算结果
-            this.DefinedFragment = new Dictionary<string, int>();
-            this.UndefineFragment = new Dictionary<string, int>();
-            for (int i = 0; i < this._recognizer.Count; i++)
+            DefinedFragment = new Dictionary<string, int>();
+            UndefineFragment = new Dictionary<string, int>();
+            foreach (var paserItem in _recognizerList)
             {
-                if (this._recognizer[i].DefinedFragment != null && this._recognizer[i].DefinedFragment.Count != 0)
+                if (paserItem.DefinedFragment != null && paserItem.DefinedFragment.Count != 0)
                 {
-                    foreach (var item in this._recognizer[i].DefinedFragment)
+                    foreach (var item in paserItem.DefinedFragment)
                     {
-                        if (!this.DefinedFragment.ContainsKey(item.Key))
-                            this.DefinedFragment.Add(item.Key, item.Value);
+                        if (!DefinedFragment.ContainsKey(item.Key))
+                            DefinedFragment.Add(item.Key, item.Value);
                         else
-                            this.DefinedFragment[item.Key] += item.Value;
+                            DefinedFragment[item.Key] += item.Value;
                     }
                 }
-                if (this._recognizer[i].UndefinedFragment != null && this._recognizer[i].UndefinedFragment.Count != 0)
+                if (paserItem.UndefinedFragment != null && paserItem.UndefinedFragment.Count != 0)
                 {
-                    foreach (var item in this._recognizer[i].UndefinedFragment)
+                    foreach (var item in paserItem.UndefinedFragment)
                     {
-                        if (!this.UndefineFragment.ContainsKey(item.Key))
-                            this.UndefineFragment.Add(item.Key, item.Value);
+                        if (!UndefineFragment.ContainsKey(item.Key))
+                            UndefineFragment.Add(item.Key, item.Value);
                         else
-                            this.UndefineFragment[item.Key] += item.Value;
+                            UndefineFragment[item.Key] += item.Value;
                     }
                 }
             }
-            if (this.SplitEnd != null)
+            SplitEnd?.Invoke(new SplitEndEventArgs
             {
-                this.SplitEnd(new SplitEndEventArgs
-                {
-                    Molecule = this._molecule,
-                    DefinedFragment = this.DefinedFragment,
-                    UndefinedFragment = this.UndefineFragment
-                });
-            }
+                Molecule = _molecule,
+                DefinedFragment = DefinedFragment,
+                UndefinedFragment = UndefineFragment
+            });
         }
 
         /// <summary>
@@ -197,11 +160,11 @@ namespace MoleSplit
         /// </summary>
         public void Clear()
         {
-            this._molecule = null;
-            this.SplitEnd = null;
-            this._recognizer = null;
-            this.DefinedFragment = null;
-            this.UndefineFragment = null;
+            _molecule = null;
+            SplitEnd = null;
+            _recognizerList = null;
+            DefinedFragment = null;
+            UndefineFragment = null;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace MoleSplit.Core
@@ -16,56 +15,58 @@ namespace MoleSplit.Core
         // ---------------------------------------------------------------------------------
         private List<int> _ringAtom; // 记录所有环上的原子(无序)
         private List<int[]> _order;// 顺序表
-        private List<int[]> _reOrder;// 逆序表
+        private List<int[]> _reverseOrder;// 逆序表
         private int[,] _lockSide;// 记录走过的边
         // ---------------------------------------------------------------------------------
 
         public override void Load(string text)
         {
-            this._operType = new List<string>();
-            this._operObject = new List<string>();
+            _operType = new List<string>();
+            _operObject = new List<string>();
 
-            var item = text.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var itemArray = text.Split(new[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var r = new Regex(@"(.+?)=\((.+?)\)");
-            for (int i = 0; i < item.Length; i++)
+            foreach (string item in itemArray)
             {
-                var m = r.Match(item[i]);
-                this._operType.Add(m.Groups[1].Value);
-                this._operObject.Add(m.Groups[2].Value);
+                var m = r.Match(item);
+                _operType.Add(m.Groups[1].Value);
+                _operObject.Add(m.Groups[2].Value);
             }
         }
 
         public override void Parse()
         {
             //if (!this._isGetEachRing) { return; }
-            for (int i = 0; i < this._operType.Count; i++)
+            for (int i = 0; i < _operType.Count; i++)
             {
-                if (this._operType[i] == "PRINT")
+                if (_operType[i] == "PRINT")
                 {
-                    int[][] temp = new int[0][];
-                    switch (this._operObject[i])
+                    int[][] tempRingArray = null;
+                    switch (_operObject[i])
                     {
-                        case "RING": temp = GetRing(".");
+                        case "RING":
+                            tempRingArray = GetRing(".");
                             break;
-                        case "C_RING": temp = GetRing("^C");
+                        case "C_RING":
+                            tempRingArray = GetRing("^C");
                             break;
-                        case "SAT_C_RING": temp = GetRing("^C1");
-                            break;
-                        default:
+                        case "SAT_C_RING":
+                            tempRingArray = GetRing("^C1");
                             break;
                     }
-                    base.DefinedFragment = new Dictionary<string, int>();
-                    
-                    for (int j = 0; j < temp.Length; j++)
+                    DefinedFragment = new Dictionary<string, int>();
+
+                    if (tempRingArray == null) continue;
+                    foreach (var tempRing in tempRingArray)
                     {
-                        var name = temp[j].Length.ToString() + '_' + this._operObject[i];
-                        if (!base.DefinedFragment.ContainsKey(name)) { base.DefinedFragment.Add(name, 0); }
-                        base.DefinedFragment[name]++;
+                        var name = tempRing.Length.ToString() + '_' + _operObject[i];
+                        if (!DefinedFragment.ContainsKey(name)) { DefinedFragment.Add(name, 0); }
+                        DefinedFragment[name]++;
                     }
                 }
                 else
                 {
-                    this.AddAttribute(this._operType[i], this._operObject[i]);
+                    AddAttribute(_operType[i], _operObject[i]);
                 }
             }
         }
@@ -74,19 +75,23 @@ namespace MoleSplit.Core
         {
             switch (operObject)
             {
-                case "RING": this.SignRing(this.GetRing("."), operType);
+                case "RING":
+                    SignRing(GetRing("."), operType);
                     break;
-                case "C_RING": this.SignRing(this.GetRing("^C"), operType);
+                case "C_RING":
+                    SignRing(GetRing("^C"), operType);
                     break;
-                case "SAT_C_RING": this.SignRing(this.GetRing("^C1"), operType);
+                case "SAT_C_RING":
+                    SignRing(GetRing("^C1"), operType);
                     break;
-                case "RING_BOND": this.SignRing(this.GetRing("."));
+                case "RING_BOND":
+                    SignRing(GetRing("."));
                     break;
-                case "C_RING_BOND": this.SignRing(this.GetRing("^C"));
+                case "C_RING_BOND":
+                    SignRing(GetRing("^C"));
                     break;
-                case "SAT_C_RING_BOND": this.SignRing(this.GetRing("^C111?"));
-                    break;
-                default:
+                case "SAT_C_RING_BOND":
+                    SignRing(GetRing("^C111?"));
                     break;
             }
         }
@@ -100,11 +105,11 @@ namespace MoleSplit.Core
         /// <param name="tag">属性标记</param>
         private void SignRing(int[][] ringList, string tag)
         {
-            for (int i = 0; i < ringList.Length; i++)
+            foreach (var ring in ringList)
             {
-                for (int j = 0; j < ringList[i].Length; j++)
+                foreach (var ringAtom in ring)
                 {
-                    base.Molecule.AtomList[ringList[i][j]] += tag;
+                    Molecule.AtomList[ringAtom] += tag;
                 }
             }
         }
@@ -115,17 +120,16 @@ namespace MoleSplit.Core
         /// <param name="ringList"></param>
         private void SignRing(int[][] ringList)
         {
-            int p_1, p_2, sign;
-            for (int i = 0; i < ringList.Length; i++)
+            foreach (int[] ring in ringList)
             {
-                for (int j = 0; j < ringList[i].Length; j++)
+                for (int j = 0; j < ring.Length; j++)
                 {
-                    p_1 = ringList[i][j];
-                    p_2 = (j < ringList[i].Length - 1) ? ringList[i][j + 1] : ringList[i][0];
-                    sign = (this.Molecule.BondState[p_1, p_2] == 1 || this.Molecule.BondState[p_2, p_1] == 1) ? -2 : -1;
+                    var p1 = ring[j];
+                    var p2 = (j < ring.Length - 1) ? ring[j + 1] : ring[0];
+                    var sign = (Molecule.BondState[p1, p2] == 1 || Molecule.BondState[p2, p1] == 1) ? -2 : -1;
 
-                    this.Molecule.BondState[p_1, p_2] = sign;
-                    this.Molecule.BondState[p_2, p_1] = sign;
+                    Molecule.BondState[p1, p2] = sign;
+                    Molecule.BondState[p2, p1] = sign;
                 }
             }
         }
@@ -136,9 +140,29 @@ namespace MoleSplit.Core
         /// <returns>原子索引数组列表</returns>
         private int[][] GetRing()
         {
-            this._isGetEachRing = false;
-            this.SerachCore();
-            return new int[1][] { this._ringAtom.ToArray() };
+            _isGetEachRing = false;
+            SerachCore();
+            return new[] { _ringAtom.ToArray() };
+        }
+
+        private int[][] GetRings()
+        {
+            _isGetEachRing = true;
+            SerachCore();
+            List<int[]> result = new List<int[]>();
+            foreach (int[] ring in _order)
+            {
+                int[] tempRing = new int[ring[0]];
+                int currentP = 1; while (ring[currentP] == 0) { currentP++; }
+                int headP = currentP, p = 0;
+                do
+                {
+                    tempRing[p++] = currentP - 1;
+                    currentP = ring[currentP];
+                } while (currentP != headP);
+                result.Add(tempRing);
+            }
+            return result.ToArray();
         }
 
         /// <summary>
@@ -148,46 +172,28 @@ namespace MoleSplit.Core
         /// <returns>原子索引数组列表</returns>
         private int[][] GetRing(string regex)
         {
-            int[][] result;
-            switch (base.Molecule.NRing)
+            int[][] ringArray;
+            switch (Molecule.NRing)
             {
-                case 0: result = new int[0][]; break;
-                case 1: result = this.GetRing(); break;
-                default:
-                    {
-                        this._isGetEachRing = true;
-                        this.SerachCore();
-                        List<int[]> tempResult = new List<int[]>();
-                        for (int i = 0; i < this._order.Count; i++)
-                        {
-                            int[] tempRing = new int[this._order[i][0]];
-                            int current_p = 1; while (this._order[i][current_p] == 0) { current_p++; }
-                            int head_p = current_p, p = 0;
-                            do
-                            {
-                                tempRing[p++] = current_p - 1;
-                                current_p = this._order[i][current_p];
-                            } while (current_p != head_p);
-                            tempResult.Add(tempRing);
-                        }
-                        result = tempResult.ToArray();
-                    } break;
+                case 0: ringArray = new int[0][]; break;
+                case 1: ringArray = GetRing(); break;
+                default: ringArray = GetRings(); break;
             }
-            List<int[]> temp = new List<int[]>();
-            Regex r = new Regex(regex);
-            for (int i = 0; i < result.Length; i++)
+            var temp = new List<int[]>();
+            var r = new Regex(regex);
+            foreach (var ring in ringArray)
             {
                 int j = 0;
-                for (; j < result[i].Length; j++)
+                for (; j < ring.Length; j++)
                 {
-                    if (!r.IsMatch(base.Molecule.AtomList[result[i][j]]))
+                    if (!r.IsMatch(Molecule.AtomList[ring[j]]))
                     {
                         break;
                     }
                 }
-                if (j==result[i].Length)
+                if (j == ring.Length)
                 {
-                    temp.Add(result[i]);
+                    temp.Add(ring);
                 }
             }
             return temp.ToArray();
@@ -197,25 +203,25 @@ namespace MoleSplit.Core
 
         private void SerachCore()
         {
-            this._order = new List<int[]>();
-            this._reOrder = new List<int[]>();
-            this._lockSide = new int[base.Molecule.AtomList.Length, base.Molecule.AtomList.Length];
-            this._ringAtom = new List<int>();
-            if (base.Molecule.NRing == 0) { return; }
-            this.SearchRing(new List<int>(), 0);
+            _order = new List<int[]>();
+            _reverseOrder = new List<int[]>();
+            _lockSide = new int[Molecule.AtomList.Length, Molecule.AtomList.Length];
+            _ringAtom = new List<int>();
+            if (Molecule.NRing == 0) { return; }
+            SearchRing(new List<int>(), 0);
         }
 
-        private void SearchRing(List<int> path, int current_p)
+        private void SearchRing(List<int> path, int currentP)
         {
             for (int i = 0; i < path.Count; i++)
             {
-                if (path[i] == current_p)
+                if (path[i] == currentP)
                 {
                     for (int p = i; p < path.Count; p++)
                     {
-                        if (!this._ringAtom.Contains(path[p])) { this._ringAtom.Add(path[p]); }
+                        if (!_ringAtom.Contains(path[p])) { _ringAtom.Add(path[p]); }
                     }
-                    if (this._isGetEachRing)
+                    if (_isGetEachRing)
                     {
                         RecordRing(path, i);
                         RepelRing();
@@ -223,15 +229,15 @@ namespace MoleSplit.Core
                     return;
                 }
             }
-            for (int next_p = 0; next_p < base.Molecule.AtomList.Length; next_p++)
+            for (int nextP = 0; nextP < Molecule.AtomList.Length; nextP++)
             {
-                if (next_p != current_p // 不撞当前点
-                 && base.Molecule.AdjMat[current_p, next_p] != 0 // 有路可走
-                 && this._lockSide[current_p, next_p] != 1) // 没走过的
+                if (nextP != currentP // 不撞当前点
+                 && Molecule.AdjMat[currentP, nextP] != 0 // 有路可走
+                 && _lockSide[currentP, nextP] != 1) // 没走过的
                 {
-                    path.Add(current_p); // 记录
-                    this._lockSide[next_p, current_p] = 1; // 不逆行
-                    this.SearchRing(path, next_p); // 递归
+                    path.Add(currentP); // 记录
+                    _lockSide[nextP, currentP] = 1; // 不逆行
+                    SearchRing(path, nextP); // 递归
                     path.RemoveAt(path.Count - 1); // 退回时删除路径
                 }
             }
@@ -239,62 +245,63 @@ namespace MoleSplit.Core
 
         private void RecordRing(List<int> path, int p)
         {
-            int[] temp_o = new int[base.Molecule.AtomList.Length + 1];
-            int[] temp_reO = new int[base.Molecule.AtomList.Length + 1];
+            int[] tempOrder = new int[Molecule.AtomList.Length + 1];
+            int[] tempReverseOrder = new int[Molecule.AtomList.Length + 1];
 
-            temp_o[0] = path.Count - p;
+            tempOrder[0] = path.Count - p;
 
             int head = path[p] + 1;
             int tail = path[path.Count - 1] + 1;
             int q = path.Count - 1;
             for (; p < path.Count - 1; p++, q--)
             {
-                temp_o[path[p] + 1] = path[p + 1] + 1;
-                temp_reO[path[q] + 1] = path[q - 1] + 1;
+                tempOrder[path[p] + 1] = path[p + 1] + 1;
+                tempReverseOrder[path[q] + 1] = path[q - 1] + 1;
             }
-            temp_o[path[p] + 1] = head;
-            temp_reO[path[q] + 1] = tail;
+            tempOrder[path[p] + 1] = head;
+            tempReverseOrder[path[q] + 1] = tail;
 
-            this._order.Add(temp_o);
-            this._reOrder.Add(temp_reO);
+            _order.Add(tempOrder);
+            _reverseOrder.Add(tempReverseOrder);
         }
 
         private void RepelRing()
         {
-            for (int i = 0; i < this._order.Count - 1; i++)
+            for (int i = 0; i < _order.Count - 1; i++)
             {
                 // 环长度相等则不需要合并
-                if (this._order[this._order.Count - 1][0] == this._order[i][0]) { continue; }
+                if (_order[_order.Count - 1][0] == _order[i][0]) { continue; }
                 // p1指向小环，p2指向大环
-                int p1 = this._order[this._order.Count - 1][0] > this._order[i][0] ? i : this._order.Count - 1;
-                int p2 = this._order[this._order.Count - 1][0] < this._order[i][0] ? i : this._order.Count - 1;
+                int p1 = _order[_order.Count - 1][0] > _order[i][0] ? i : _order.Count - 1;
+                int p2 = _order[_order.Count - 1][0] < _order[i][0] ? i : _order.Count - 1;
                 // 备份
-                int[] tempRing = new int[this._order[p2].Length];
+                int[] tempRing = new int[_order[p2].Length];
                 // 删长边
                 int num = 0;
-                for (int j = 1; j < this._order[p2].Length; j++)
+                for (int j = 1; j < _order[p2].Length; j++)
                 {
-                    if (this._order[p2][j] != 0 && this._order[p2][j] != this._order[p1][j])
+                    if (_order[p2][j] != 0 && _order[p2][j] != _order[p1][j])
                     {
-                        tempRing[j] = this._order[p2][j];
+                        tempRing[j] = _order[p2][j];
                         num++;
                     }
                 }
-                if ((this._order[p2][0] - num) <= this._order[p1][0] / 2) { continue; } // 重合度不够，则不合并环
+                if ((_order[p2][0] - num) <= _order[p1][0] / 2) { continue; } // 重合度不够，则不合并环
                 // 更新新环的长度
-                tempRing[0] = 2 * num + this._order[p1][0] - this._order[p2][0];
+                tempRing[0] = 2 * num + _order[p1][0] - _order[p2][0];
                 // 补短边
-                int head_p = 1; while (tempRing[head_p] == 0) { head_p++; }
-                int current_p = head_p;
-                for (int j = 0; tempRing[current_p] != head_p; j++)
+                int headP = 1; while (tempRing[headP] == 0) { headP++; }
+                int currentP = headP;
+                //for (int j = 0; tempRing[currentP] != headP; j++) // 莫名其妙
+                while (tempRing[currentP] != headP)
                 {
-                    if (tempRing[current_p] == 0)
+                    if (tempRing[currentP] == 0)
                     {
-                        tempRing[current_p] = this._reOrder[p1][current_p];
+                        tempRing[currentP] = _reverseOrder[p1][currentP];
                     }
-                    current_p = tempRing[current_p];
+                    currentP = tempRing[currentP];
                 }
-                this._order[p2] = tempRing;
+                _order[p2] = tempRing;
             }
         }
     }
