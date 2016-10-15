@@ -18,19 +18,19 @@ namespace MoleSplit.Core
             /// <summary>
             /// 基团名称
             /// </summary>
-            public string Name { get; private set; }
+            public string Name { get; }
 
             /// <summary>
             /// 基团邻接矩阵的条件：
             /// (1)第一个元素必须是与母体相连的原子（一般为C）；
             /// (2)原子顺序必须逐层排列
             /// </summary>
-            public int[][] AdjMat { get; private set; }
+            public int[][] AdjMat { get; }
 
             /// <summary>
             /// 原子列表（对应邻接矩阵）
             /// </summary>
-            public Regex[] AtomCodeList { get; private set; }
+            public Regex[] AtomCodeList { get; }
 
             /// <summary>
             /// 重命名原子 或 辅助定位原子的坐标
@@ -39,12 +39,12 @@ namespace MoleSplit.Core
 
             public Subgraph(string text)
             {
-                var info = text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var tags = info[0].Split(new char[] { '?', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                var info = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var tags = info[0].Split(new[] { '?', ':' }, StringSplitOptions.RemoveEmptyEntries);
 
-                this.AdjMat = new int[info.Length - 2][];
-                this.AtomCodeList = new Regex[info.Length - 1];
-                this.Name = tags[0];
+                AdjMat = new int[info.Length - 2][];
+                AtomCodeList = new Regex[info.Length - 1];
+                Name = tags[0];
                 //this.Tag = new string[0];
                 //if (tags.Length > 1)
                 //{
@@ -56,20 +56,20 @@ namespace MoleSplit.Core
                 //}
                 for (int i = 1; i < info.Length; i++)
                 {
-                    string[] element = info[i].Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] element = info[i].Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     string regexStr = '^' + element[0];
 
                     regexStr = regexStr.Replace("_", "_(_.+?_)*_");
                     regexStr = regexStr.Replace("$", @"_$");
                     if (regexStr[regexStr.Length - 1] != '$') { regexStr += '_'; }
 
-                    this.AtomCodeList[i - 1] = new Regex(regexStr, RegexOptions.Compiled);
+                    AtomCodeList[i - 1] = new Regex(regexStr, RegexOptions.Compiled);
                     int[] temp = new int[i - 1];
                     for (int k = 0; k < temp.Length; k++)
                     {
                         temp[k] = int.Parse(element[k + 1]);
                     }
-                    if (temp.Length != 0) { this.AdjMat[i - 2] = temp; }
+                    if (temp.Length != 0) { AdjMat[i - 2] = temp; }
                 }
             }
         }
@@ -88,44 +88,43 @@ namespace MoleSplit.Core
 
         public override void Load(string text)
         {
-            this._radicalToMatch = new List<Subgraph>();
-            this._radicalToRename = new List<Subgraph>();
+            _radicalToMatch = new List<Subgraph>();
+            _radicalToRename = new List<Subgraph>();
 
-            var item = text.Split(new string[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var item = text.Split(new[] { "\r\n\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var r = new Regex(@"=\((.+?)\)", RegexOptions.Compiled);
 
             int i = 0;
             if (item[0] == "LOCKING_BOND")
             {
-                this._isLockingBond = true;
+                _isLockingBond = true;
                 i = 1;
             }
             for (; i < item.Length; i++)
             {
-                string[] temp = r.Match(item[i]).Groups[1].Value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries); // 提取附加坐标
+                string[] temp = r.Match(item[i]).Groups[1].Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries); // 提取附加坐标
                 int[] tempInt = new int[temp.Length];
                 for (int j = 0; j < temp.Length; j++)
                 {
                     tempInt[j] = int.Parse(temp[j]);
                 }
                 string tempInfo = r.Replace(item[i], "");
-                var tempRadical = new Subgraph(tempInfo);
-                tempRadical.SpecialAtom = tempInt;
+                var tempRadical = new Subgraph(tempInfo) {SpecialAtom = tempInt};
 
                 switch (item[i][0])
                 {
-                    case '_': this._radicalToRename.Add(tempRadical);
+                    case '_': _radicalToRename.Add(tempRadical);
                         break;
-                    case '*': this._radicalToMatch.Add(tempRadical);
+                    case '*': _radicalToMatch.Add(tempRadical);
                         break;
                     default:
                         if (tempInt.Length > 0)
                         {
-                            this._radicalToRename.Add(tempRadical);
+                            _radicalToRename.Add(tempRadical);
                         }
                         else
                         {
-                            this._radicalToMatch.Add(tempRadical);
+                            _radicalToMatch.Add(tempRadical);
                         }
                         break;
                 }
@@ -134,86 +133,83 @@ namespace MoleSplit.Core
 
         public override void Parse()
         {
-            this._nAtom = base.Molecule.AtomList.Length; // 取出原子个数，性能分析指出：此项使用调用极为频繁，若调用属性（函数）将大大拖慢程序
-            this._lock = new bool[this._nAtom];
-            base.DefinedFragment = new Dictionary<string, int>();
-            this.AddAttribute(); // 标记属性
-            this._sign = 1;
-            for (int i = 0; i < this._radicalToMatch.Count; i++)
+            _nAtom = Molecule.AtomList.Length; // 取出原子个数，性能分析指出：此项使用调用极为频繁，若调用属性（函数）将大大拖慢程序
+            _lock = new bool[_nAtom];
+            DefinedFragment = new Dictionary<string, int>();
+            AddAttribute(); // 标记属性
+            _sign = 1;
+            foreach (Subgraph redical in _radicalToMatch)
             {
-                this._radical = this._radicalToMatch[i];
+                _radical = redical;
                 List<string> lastResults = new List<string>();
                 var count = 0;
-                this.MatchCore(() =>
+                MatchCore(() =>
                 {
                     int[] tempIntArray = null;
-                    if (this._radical.SpecialAtom.Length == this._radical.AtomCodeList.Length) // 全虚拟：虚拟原子不可相同
+                    if (_radical.SpecialAtom.Length == _radical.AtomCodeList.Length) // 全虚拟：虚拟原子不可相同
                     {
-                        tempIntArray = this._matched;
+                        tempIntArray = _matched;
                     }
-                    else if (this._radical.SpecialAtom.Length != 0) // 部分虚拟：非虚拟原子不可相同，虚拟原子可以相同
+                    else if (_radical.SpecialAtom.Length != 0) // 部分虚拟：非虚拟原子不可相同，虚拟原子可以相同
                     {
-                        tempIntArray = new int[this._radical.AtomCodeList.Length - this._radical.SpecialAtom.Length];
-                        for (int j = 0, p = 0; j < this._matched.Length; j++)
+                        tempIntArray = new int[_radical.AtomCodeList.Length - _radical.SpecialAtom.Length];
+                        for (int j = 0, p = 0; j < _matched.Length; j++)
                         {
-                            if (!this._radical.SpecialAtom.Contains(j))
+                            if (!_radical.SpecialAtom.Contains(j))
                             {
-                                tempIntArray[p++] = this._matched[j];
+                                tempIntArray[p++] = _matched[j];
                             }
                         }
                     }
-                    string str_ResultSort = "";
+                    string strResultSort = "";
                     if (tempIntArray != null)
                     {
                         Array.Sort(tempIntArray);
-                        for (int j = 0; j < tempIntArray.Length; j++)
-                        {
-                            str_ResultSort += (tempIntArray[j] + "/");
-                        }
+                        strResultSort = tempIntArray.Aggregate(strResultSort, (current, t) => current + (t + "/"));
                     }
-                    if (!lastResults.Contains(str_ResultSort))
+                    if (!lastResults.Contains(strResultSort))
                     {
                         count++;
-                        if (str_ResultSort != "")
+                        if (strResultSort != "")
                         {
-                            lastResults.Add(str_ResultSort);
+                            lastResults.Add(strResultSort);
                         }
                     }
-                    if (this._isLockingBond) { this.LockingBond(); } // do some other things.
+                    if (_isLockingBond) { LockingBond(); } // do some other things.
                 });
                 for (int j = 0; j < count; j++)
                 {
-                    var tempName = (this._radical.Name).Replace("*", "");
-                    if (!base.DefinedFragment.ContainsKey(tempName)) { base.DefinedFragment.Add(tempName, 0); }
-                    base.DefinedFragment[tempName]++; // 装入结果
+                    var tempName = (_radical.Name).Replace("*", "");
+                    if (!DefinedFragment.ContainsKey(tempName)) { DefinedFragment.Add(tempName, 0); }
+                    DefinedFragment[tempName]++; // 装入结果
                 }
             }
         }
 
         private void AddAttribute()
         {
-            this._sign = -1;
-            for (int i = 0; i < this._radicalToRename.Count; i++)
+            _sign = -1;
+            foreach (var redical in _radicalToRename)
             {
-                this._radical = this._radicalToRename[i];
-                this.MatchCore(() =>
+                _radical = redical;
+                MatchCore(() =>
                 {
-                    if (this._radical.Name[0] == '_') // 属性添加
+                    if (_radical.Name[0] == '_') // 属性添加
                     {
-                        for (int j = 0; j < this._radicalToRename[i].SpecialAtom.Length; j++)
+                        foreach (var specialAtom in redical.SpecialAtom)
                         {
-                            base.Molecule.AtomList[this._matched[this._radicalToRename[i].SpecialAtom[j]]] += this._radical.Name;
+                            Molecule.AtomList[_matched[specialAtom]] += _radical.Name;
                         }
                     }
                     else // 全名重载
                     {
-                        for (int j = 0; j < this._radicalToRename[i].SpecialAtom.Length; j++)
+                        foreach (var specialAtom in redical.SpecialAtom)
                         {
-                            base.Molecule.AtomList[this._matched[this._radicalToRename[i].SpecialAtom[j]]] = this._radical.Name;
+                            Molecule.AtomList[_matched[specialAtom]] = _radical.Name;
                         }
                     }
                 });
-                base.Molecule.AtomState = new int[this._nAtom];
+                Molecule.AtomState = new int[_nAtom];
             }
         }
 
@@ -221,34 +217,34 @@ namespace MoleSplit.Core
 
         private void MatchCore(Action operation)
         {
-            if (this._nAtom < this._radical.AtomCodeList.Length) { return; }
-            this._matched = new int[this._radical.AtomCodeList.Length];
-            for (int i = 0; i < this._nAtom; i++)
+            if (_nAtom < _radical.AtomCodeList.Length) { return; }
+            _matched = new int[_radical.AtomCodeList.Length];
+            for (int i = 0; i < _nAtom; i++)
             {
-                if ((base.Molecule.AtomState[i] == 0
-                 || (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0)))
-                 && this._radical.AtomCodeList[0].IsMatch(base.Molecule.AtomList[i]))
+                if ((Molecule.AtomState[i] == 0
+                 || (_radical.Name[0] == '*' && _radical.SpecialAtom.Contains(0)))
+                 && _radical.AtomCodeList[0].IsMatch(Molecule.AtomList[i]))
                 {
-                    this._matched[0] = i;
-                    this._isBreak = false;
-                    int backupState = base.Molecule.AtomState[this._matched[0]]; // 备份原子访问状态
-                    base.Molecule.AtomState[i] = this._sign;
-                    this._lock[i] = true; // 锁定首原子
+                    _matched[0] = i;
+                    _isBreak = false;
+                    int backupState = Molecule.AtomState[_matched[0]]; // 备份原子访问状态
+                    Molecule.AtomState[i] = _sign;
+                    _lock[i] = true; // 锁定首原子
                     //this._lock = new bool[this._nAtom]; // 没有正在使用中的原子
-                    this.Match_R(1);
-                    this._lock[i] = false; // 解除锁定
+                    Match_R(1);
+                    _lock[i] = false; // 解除锁定
                     // 退出时，将特殊原子全部恢复
-                    if (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(0))
+                    if (_radical.Name[0] == '*' && _radical.SpecialAtom.Contains(0))
                     {
-                        base.Molecule.AtomState[i] = backupState;
+                        Molecule.AtomState[i] = backupState;
                     }
-                    if (this._isBreak)
+                    if (_isBreak)
                     {
                         operation();
                     }
                     else
                     {
-                        base.Molecule.AtomState[i] = backupState; // 当匹配失败时，从备份中还原原子状态
+                        Molecule.AtomState[i] = backupState; // 当匹配失败时，从备份中还原原子状态
                     }
                 }
             }
@@ -256,42 +252,42 @@ namespace MoleSplit.Core
 
         private void Match_R(int n)
         {
-            if (n == this._matched.Length)
+            if (n == _matched.Length)
             {
-                this._isBreak = true;
+                _isBreak = true;
                 return;
             }
             for (int i = 0; i < n; i++)
             {
-                if (this._radical.AdjMat[n - 1][i] == 0) { continue; }
-                for (int p_M_Next = 0; p_M_Next < this._nAtom; p_M_Next++)
+                if (_radical.AdjMat[n - 1][i] == 0) { continue; }
+                for (int pMNext = 0; pMNext < _nAtom; pMNext++)
                 {
-                    if (base.Molecule.AdjMat[this._matched[i], p_M_Next] != 0
-                     && ((base.Molecule.AtomState[p_M_Next] <= 0 || this._radical.SpecialAtom.Contains(n)) && !this._lock[p_M_Next]) // 下个原子的状态码表示可用且该原子并没有正在被使用
-                     && this._radical.AtomCodeList[n].IsMatch(base.Molecule.AtomList[p_M_Next]))
+                    if (Molecule.AdjMat[_matched[i], pMNext] != 0
+                     && ((Molecule.AtomState[pMNext] <= 0 || _radical.SpecialAtom.Contains(n)) && !_lock[pMNext]) // 下个原子的状态码表示可用且该原子并没有正在被使用
+                     && _radical.AtomCodeList[n].IsMatch(Molecule.AtomList[pMNext]))
                     {
-                        this._matched[n] = p_M_Next;
-                        if (this.Compare(n, this._matched))
+                        _matched[n] = pMNext;
+                        if (Compare(n, _matched))
                         {
-                            int backupState = base.Molecule.AtomState[this._matched[n]];
+                            int backupState = Molecule.AtomState[_matched[n]];
                             // 进：修改原子状态 && 锁定原子
-                            base.Molecule.AtomState[p_M_Next] = this._sign;
-                            this._lock[p_M_Next] = true;
+                            Molecule.AtomState[pMNext] = _sign;
+                            _lock[pMNext] = true;
 
-                            this.Match_R(n + 1);
-                            if (this._isBreak)
+                            Match_R(n + 1);
+                            if (_isBreak)
                             {
-                                this._lock[p_M_Next] = false;
+                                _lock[pMNext] = false;
                                 // 退出时，将特殊原子全部恢复
-                                if (this._radical.Name[0] == '*' && this._radical.SpecialAtom.Contains(n))
+                                if (_radical.Name[0] == '*' && _radical.SpecialAtom.Contains(n))
                                 {
-                                    base.Molecule.AtomState[p_M_Next] = backupState;
+                                    Molecule.AtomState[pMNext] = backupState;
                                 }
                                 return;
                             }
                             // 退：恢复原子状态 && 接触锁定
-                            base.Molecule.AtomState[p_M_Next] = backupState;
-                            this._lock[p_M_Next] = false;
+                            Molecule.AtomState[pMNext] = backupState;
+                            _lock[pMNext] = false;
                         }
                     }
                 }
@@ -302,8 +298,8 @@ namespace MoleSplit.Core
         {
             for (int j = 0; j < n; j++)
             {
-                if (base.Molecule.AdjMat[matched[n], matched[j]] != this._radical.AdjMat[n - 1][j]
-               && !(this._radical.AdjMat[n - 1][j] > 4 && base.Molecule.AdjMat[matched[n], matched[j]] != 0))
+                if (Molecule.AdjMat[matched[n], matched[j]] != _radical.AdjMat[n - 1][j]
+               && !(_radical.AdjMat[n - 1][j] > 4 && Molecule.AdjMat[matched[n], matched[j]] != 0))
                 {
                     return false;
                 }
@@ -313,17 +309,16 @@ namespace MoleSplit.Core
 
         private void LockingBond()
         {
-            int sign;
-            for (int i = 1; i < this._radical.AtomCodeList.Length; i++)
+            for (int i = 1; i < _radical.AtomCodeList.Length; i++)
             {
-                for (int j = 0; j < this._radical.AdjMat[i - 1].Length; j++)
+                for (int j = 0; j < _radical.AdjMat[i - 1].Length; j++)
                 {
-                    if (this._radical.AdjMat[i - 1][j] != 0)
+                    if (_radical.AdjMat[i - 1][j] != 0)
                     {
-                        sign = (this.Molecule.BondState[this._matched[i], this._matched[j]] == 0
-                            && this.Molecule.BondState[this._matched[i], this._matched[j]] == 0) ? 1 : -2;
-                        base.Molecule.BondState[this._matched[i], this._matched[j]] = sign;
-                        base.Molecule.BondState[this._matched[j], this._matched[i]] = sign;
+                        var sign = (Molecule.BondState[_matched[i], _matched[j]] == 0
+                                    && Molecule.BondState[_matched[i], _matched[j]] == 0) ? 1 : -2;
+                        Molecule.BondState[_matched[i], _matched[j]] = sign;
+                        Molecule.BondState[_matched[j], _matched[i]] = sign;
                     }
                 }
             }
