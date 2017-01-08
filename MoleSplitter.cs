@@ -7,15 +7,9 @@ using MoleSplit.Core;
 namespace MoleSplit
 {
     /// <summary>
-    /// 拆分完成后处理事件
-    /// </summary>
-    /// <param name="e">拆分结果</param>
-    public delegate void SplitEndEventHandler(SplitEndEventArgs e);
-
-    /// <summary>
     /// 拆分后处理事件参数类
     /// </summary>
-    public class SplitEndEventArgs
+    public class SplitEndEventArgs : EventArgs
     {
         /// <summary>
         /// 当前被解析的分子
@@ -61,7 +55,7 @@ namespace MoleSplit
         /// <summary>
         /// 用于拆分完成后对结果进行进一步处理
         /// </summary>
-        public event SplitEndEventHandler SplitEnd;
+        public event EventHandler<SplitEndEventArgs> SplitEnd;
 
         /// <summary>
         /// 解析器组
@@ -147,12 +141,7 @@ namespace MoleSplit
                     }
                 }
             }
-            SplitEnd?.Invoke(new SplitEndEventArgs
-            {
-                Molecule = _molecule,
-                DefinedFragment = DefinedFragment,
-                UndefinedFragment = UndefineFragment
-            });
+            SplitEnd?.Invoke(this, new SplitEndEventArgs { Molecule = _molecule, DefinedFragment = DefinedFragment, UndefinedFragment = UndefineFragment });
         }
 
         /// <summary>
