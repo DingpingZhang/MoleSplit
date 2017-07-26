@@ -1,81 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using MoleSplit.Core;
 
 namespace MoleSplit
 {
     /// <summary>
-    /// 拆分后处理事件参数类
-    /// </summary>
-    public class SplitEndEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 当前被解析的分子
-        /// </summary>
-        public MoleInfo Molecule { get; set; }
-
-        /// <summary>
-        /// 预定义碎片
-        /// </summary>
-        public Dictionary<string, int> DefinedFragment { get; set; }
-
-        /// <summary>
-        /// 未定义碎片
-        /// </summary>
-        public Dictionary<string, int> UndefinedFragment { get; set; }
-    }
-
-    /// <summary>
     /// 分子自动拆分
     /// </summary>
     public class MoleSplitter
     {
-
-        /// <summary>
-        /// 定义的分子片段
-        /// </summary>
-        public Dictionary<string, int> DefinedFragment { get; protected set; }
-
-        /// <summary>
-        /// 未定义的分子片段
-        /// </summary>
-        public Dictionary<string, int> UndefineFragment { get; protected set; }
-
-        // ------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// 待解析的分子
-        /// </summary>
-        private MoleInfo _molecule;
-
-        // ------------------------------------------------------------------------------------
-
         /// <summary>
         /// 用于拆分完成后对结果进行进一步处理
         /// </summary>
-        public event EventHandler<SplitEndEventArgs> SplitEnd;
+        public event EventHandler<SplitedEventArgs> Splited;
 
         /// <summary>
         /// 解析器组
         /// </summary>
-        private List<RecognizerBase> _recognizerList;
+        private ICollection<RecognizerBase> _recognizers;
 
         // ------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// 加载mol文件
-        /// </summary>
-        /// <param name="filePath"></param>
-        public void LoadMolFile(string filePath)
-        {
-            if (!(File.Exists(filePath) && new Regex(".mol$").IsMatch(filePath))) { return; }
-            using (var sr = new StreamReader(filePath))
-            {
-                _molecule = new MoleInfo(sr.ReadToEnd());
-            }
-        }
 
         /// <summary>
         /// 加载定义文件
@@ -83,65 +31,75 @@ namespace MoleSplit
         /// <param name="filePath"></param>
         public void LoadDefineFile(string filePath)
         {
-            if (_molecule != null) { _molecule.AtomState = new int[_molecule.AtomState.Length]; }
-
             if (!(File.Exists(filePath) && new Regex(".mdef$").IsMatch(filePath))) { return; }
             string[] temp;
             using (var sr = new StreamReader(filePath))
             {
                 temp = sr.ReadToEnd().Split(new[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
             }
-            _recognizerList = new List<RecognizerBase>();
+            _recognizers = new List<RecognizerBase>();
             for (var i = 0; i < temp.Length; i += 2)
             {
                 var tempType = Type.GetType("MoleSplit.Core." + temp[i]);
                 if (tempType == null) continue;
-                var tempInstance = Activator.CreateInstance(tempType) as RecognizerBase;
-                if (tempInstance == null) continue;
-                tempInstance.Load(temp[i + 1]);
-                _recognizerList.Add(tempInstance);
+                if (Activator.CreateInstance(tempType) is RecognizerBase tempInstance)
+                {
+                    tempInstance.Load(temp[i + 1]);
+                    _recognizers.Add(tempInstance);
+                }
             }
         }
 
         /// <summary>
         /// 启动解析
         /// </summary>
-        public void Parse()
+        public (IReadOnlyCollection<MoleculeFragment> DefinedFragments, IReadOnlyCollection<MoleculeFragment> UndefinedFragments) Parse(Molecule molecule)
         {
-            if (_recognizerList == null || _molecule == null) { return; }
+            if (_recognizers == null) throw new ArgumentException();
+
             // 1.进行解析
-            foreach (var recognizer in _recognizerList)
+            foreach (var recognizer in _recognizers)
             {
-                recognizer.Molecule = _molecule;
+                recognizer.Molecule = molecule;
                 recognizer.Parse();
             }
             // 2.结算结果
-            DefinedFragment = new Dictionary<string, int>();
-            UndefineFragment = new Dictionary<string, int>();
-            foreach (var paserItem in _recognizerList)
+            var tempDefinedFragments = new Dictionary<string, int>();
+            var tempUndefineFragments = new Dictionary<string, int>();
+            foreach (var paserItem in _recognizers)
             {
                 if (paserItem.DefinedFragment != null && paserItem.DefinedFragment.Count != 0)
                 {
                     foreach (var item in paserItem.DefinedFragment)
                     {
-                        if (!DefinedFragment.ContainsKey(item.Key))
-                            DefinedFragment.Add(item.Key, item.Value);
+                        if (!tempDefinedFragments.ContainsKey(item.Key))
+                            tempDefinedFragments.Add(item.Key, item.Value);
                         else
-                            DefinedFragment[item.Key] += item.Value;
+                            tempDefinedFragments[item.Key] += item.Value;
                     }
                 }
                 if (paserItem.UndefinedFragment != null && paserItem.UndefinedFragment.Count != 0)
                 {
                     foreach (var item in paserItem.UndefinedFragment)
                     {
-                        if (!UndefineFragment.ContainsKey(item.Key))
-                            UndefineFragment.Add(item.Key, item.Value);
+                        if (!tempUndefineFragments.ContainsKey(item.Key))
+                            tempUndefineFragments.Add(item.Key, item.Value);
                         else
-                            UndefineFragment[item.Key] += item.Value;
+                            tempUndefineFragments[item.Key] += item.Value;
                     }
                 }
             }
-            SplitEnd?.Invoke(this, new SplitEndEventArgs { Molecule = _molecule, DefinedFragment = DefinedFragment, UndefinedFragment = UndefineFragment });
+            var definedFragments = (from item in tempDefinedFragments
+                                    select new MoleculeFragment(item.Key, item.Value)).ToArray();
+            var undefinedFragments = (from item in tempUndefineFragments
+                                      select new MoleculeFragment(item.Key, item.Value)).ToArray();
+            Splited?.Invoke(this, new SplitedEventArgs
+            {
+                Molecule = molecule,
+                DefinedFragment = definedFragments,
+                UndefinedFragment = undefinedFragments
+            });
+            return (definedFragments, undefinedFragments);
         }
 
         /// <summary>
@@ -149,11 +107,8 @@ namespace MoleSplit
         /// </summary>
         public void Clear()
         {
-            _molecule = null;
-            SplitEnd = null;
-            _recognizerList = null;
-            DefinedFragment = null;
-            UndefineFragment = null;
+            _recognizers = null;
+            Splited = null;
         }
     }
 }

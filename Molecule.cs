@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 
-namespace MoleSplit.Core
+namespace MoleSplit
 {
     /// <summary>
     /// 将mol文件中的信息转化为可用字段
     /// </summary>
-    public class MoleInfo
+    public class Molecule
     {
         /// <summary>
         /// 分子邻接矩阵
@@ -51,7 +53,7 @@ namespace MoleSplit.Core
         /// 构造函数
         /// </summary>
         /// <param name="text">分子信息文本</param>
-        public MoleInfo(string text)
+        private Molecule(string text)
         {
             var molInfo = text.Contains(" H ") ? GetTextWithoutH(text) : text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
@@ -91,6 +93,18 @@ namespace MoleSplit.Core
                 Charge[i] = tempStrs[5] == "0" ? 0 : 4 - int.Parse(tempStrs[5]);
             }
         }
+
+        public static Molecule Load(string filePath)
+        {
+            if (!(File.Exists(filePath) && new Regex(".mol$").IsMatch(filePath))) throw new FileNotFoundException();
+            Molecule molecule;
+            using (var sr = new StreamReader(filePath))
+            {
+                molecule = new Molecule(sr.ReadToEnd());
+            }
+            return molecule;
+        }
+
         private string[] GetTextWithoutH(string text)
         {
             var molInfo = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -137,6 +151,7 @@ namespace MoleSplit.Core
             temp[3] = nAtomWithoutH + " " + (temp.Count - nAtomWithoutH - 4);
             return temp.ToArray();
         }
+
         private string StringSort(string str)
         {
             if (str == null) { return ""; }

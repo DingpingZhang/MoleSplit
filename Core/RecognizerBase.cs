@@ -20,7 +20,7 @@ namespace MoleSplit.Core
         /// <summary>
         /// 待解析的分子
         /// </summary>
-        public MoleInfo Molecule { get; set; }
+        public Molecule Molecule { get; set; }
 
         /// <summary>
         /// 载入解析依据
